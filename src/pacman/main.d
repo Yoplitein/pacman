@@ -1,4 +1,5 @@
 import std.experimental.logger;
+import std.string;
 
 import gfm.logger;
 import gfm.sdl2;
@@ -43,8 +44,10 @@ SDL_PixelFormat get_format_data(uint format)
 
 SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
 {
+    info("Loading texture ", path);
+    
     auto formatData = get_format_data(pixelFormat);
-    auto surfaceRaw = sdlImage.load("res/player0.png"); scope(exit) surfaceRaw.close;
+    auto surfaceRaw = sdlImage.load(path); scope(exit) surfaceRaw.close;
     auto surface = surfaceRaw.convert(&formatData); scope(exit) surface.close;
     auto result = new SDL2Texture(
         renderer,
@@ -74,7 +77,16 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED
     ); scope(exit) renderer.close;
-    texture = load_texture("res/player0.png");
+    SDL2Texture[] playerTextures;
+    uint now;
+    uint last;
+    uint textureIndex;
+    bool increment = true;
+    
+    foreach(index; 0 .. 16)
+        playerTextures ~= load_texture("res/player%d.png".format(index));
+    
+    texture = playerTextures[0];
     
     while(true)
     {
@@ -82,6 +94,24 @@ void main()
         
         if(sdl.keyboard.isPressed(SDLK_ESCAPE))
             break;
+        
+        now = SDL_GetTicks();
+        
+        if(now - last > 15)
+        {
+            if(increment)
+                textureIndex++;
+            else
+                textureIndex--;
+            
+            if(textureIndex == 0 || textureIndex == playerTextures.length - 1)
+                increment = !increment;
+            
+            info(textureIndex);
+            
+            texture = playerTextures[textureIndex];
+            last = now;
+        }
         
         renderer.clear;
         renderer.copy(texture, 100, 100);
