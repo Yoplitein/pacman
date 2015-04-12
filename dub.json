@@ -1,0 +1,10 @@
+{
+    "name": "pacman",
+    "description": "A minimal D application.",
+    "copyright": "Copyright © 2015, Steven",
+    "authors": ["Steven"],
+    "dependencies": {
+        "gfm:logger": ">=2.0.15",
+        "gfm:sdl2": ">=2.0.15",
+    },
+}
