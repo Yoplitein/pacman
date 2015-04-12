@@ -12,6 +12,58 @@ SDLImage sdlImage;
 SDL2Window window;
 SDL2Renderer renderer;
 SDL2Texture texture;
+uint now;
+
+class Player
+{
+    enum NUM_TEXTURES = 16;
+    enum ANIMATION_DELAY = 15;
+    SDL2Texture[] animationFrames;
+    SDL2Texture activeTexture;
+    uint textureIndex;
+    bool animate = true;
+    bool increment = true;
+    uint lastAnimationStep;
+    
+    this()
+    {
+        foreach(index; 0 .. NUM_TEXTURES)
+            animationFrames ~= load_texture("res/player%d.png".format(index));
+        
+        activeTexture = animationFrames[0];
+    }
+    
+    ~this()
+    {
+        foreach(texture; animationFrames)
+            texture.close;
+    }
+    
+    void update()
+    {
+        if(!animate)
+            return;
+        
+        if(now - lastAnimationStep > ANIMATION_DELAY)
+        {
+            if(increment)
+                textureIndex++;
+            else
+                textureIndex--;
+            
+            if(textureIndex == 0 || textureIndex == animationFrames.length - 1)
+                increment = !increment;
+            
+            activeTexture = animationFrames[textureIndex];
+            lastAnimationStep = now;
+        }
+    }
+    
+    void render()
+    {
+        renderer.copy(activeTexture, 100, 100);
+    }
+}
 
 SDL_PixelFormat get_format_data(uint format)
 {
@@ -77,16 +129,7 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED
     ); scope(exit) renderer.close;
-    SDL2Texture[] playerTextures;
-    uint now;
-    uint last;
-    uint textureIndex;
-    bool increment = true;
-    
-    foreach(index; 0 .. 16)
-        playerTextures ~= load_texture("res/player%d.png".format(index));
-    
-    texture = playerTextures[0];
+    Player player = new Player; scope(exit) player.destroy;
     
     while(true)
     {
@@ -97,24 +140,10 @@ void main()
         
         now = SDL_GetTicks();
         
-        if(now - last > 15)
-        {
-            if(increment)
-                textureIndex++;
-            else
-                textureIndex--;
-            
-            if(textureIndex == 0 || textureIndex == playerTextures.length - 1)
-                increment = !increment;
-            
-            info(textureIndex);
-            
-            texture = playerTextures[textureIndex];
-            last = now;
-        }
-        
         renderer.clear;
-        renderer.copy(texture, 100, 100);
+        player.update;
+        player.render;
+        //renderer.copy(texture, 100, 100);
         renderer.present;
     }
 }
