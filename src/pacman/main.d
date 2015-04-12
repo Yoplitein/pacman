@@ -12,7 +12,7 @@ SDL2Window window;
 SDL2Renderer renderer;
 SDL2Texture texture;
 
-SDL_PixelFormat format_from_enum(uint format)
+SDL_PixelFormat get_format_data(uint format)
 {
     SDL_PixelFormat result;
     int bpp;
@@ -41,6 +41,24 @@ SDL_PixelFormat format_from_enum(uint format)
     return result;
 }
 
+SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
+{
+    auto formatData = get_format_data(pixelFormat);
+    auto surfaceRaw = sdlImage.load("res/player0.png"); scope(exit) surfaceRaw.close;
+    auto surface = surfaceRaw.convert(&formatData); scope(exit) surface.close;
+    auto result = new SDL2Texture(
+        renderer,
+        pixelFormat,
+        SDL_TEXTUREACCESS_STATIC,
+        surface.width, surface.height
+    );
+    
+    result.updateTexture(surface.pixels, surface.pitch);
+    result.setBlendMode(SDL_BLENDMODE_BLEND);
+    
+    return result;
+}
+
 void main()
 {
 	stdlog = new ConsoleLogger;
@@ -56,18 +74,7 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED
     ); scope(exit) renderer.close;
-    auto format = format_from_enum(SDL_PIXELFORMAT_RGBA8888);
-    auto playerTextureRaw = sdlImage.load("res/player0.png"); scope(exit) playerTextureRaw.close;
-    auto playerTexture = playerTextureRaw.convert(&format); scope(exit) playerTexture.close;
-    texture = new SDL2Texture(
-        renderer,
-        SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STATIC,
-        playerTexture.width, playerTexture.height
-    );
-    
-    texture.updateTexture(playerTexture.pixels, playerTexture.pitch);
-    texture.setBlendMode(SDL_BLENDMODE_BLEND);
+    texture = load_texture("res/player0.png");
     
     while(true)
     {
@@ -77,7 +84,7 @@ void main()
             break;
         
         renderer.clear;
-        renderer.copy(texture, 0, 0);
+        renderer.copy(texture, 100, 100);
         renderer.present;
     }
 }
