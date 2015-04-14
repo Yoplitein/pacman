@@ -2,16 +2,29 @@ module pacman.grid;
 
 import gfm.sdl2;
 
+import pacman;
 import pacman.texture;
 import pacman.globals;
+
+enum TileType
+{
+    NONE,
+    WALL,
+}
 
 final class Grid
 {
     SDL2Texture texture;
+    int width;
+    int height;
+    TileType[] tiles;
     
     this()
     {
         texture = load_texture("res/debug.png");
+        width = 8;
+        height = 8;
+        tiles.length = width * height;
     }
     
     ~this()
@@ -21,23 +34,29 @@ final class Grid
     
     void render()
     {
-        immutable tilesX = WIDTH / TILE_SIZE;
-        immutable tilesY = HEIGHT / TILE_SIZE;
-        
-        foreach(y; 0 .. tilesY - 1)
-            foreach(x; 0 .. tilesX - 1)
+        foreach(y; 0 .. width)
+            foreach(x; 0 .. height)
             {
-                int target;
-                
-                if(y % 2 == 0)
-                    target = 0;
-                else
-                    target = 1;
-                
-                if(x % 2 == target)
+                if(!solid(vec2i(x, y)))
                     continue;
                 
                 renderer.copy(texture, x * TILE_SIZE, y * TILE_SIZE);
             }
+    }
+    
+    bool solid(vec2i tilePos)
+    {
+        TileType type = this[tilePos];
+        
+        return type == TileType.WALL;
+    }
+    
+    ref TileType opIndex(vec2i tilePos)
+    {
+        size_t index = tilePos.y * height + tilePos.x;
+        
+        assert(index >= 0 && index <= tiles.length);
+        
+        return tiles[index];
     }
 }

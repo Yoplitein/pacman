@@ -4,6 +4,7 @@ import std.string;
 import gfm.logger;
 import gfm.sdl2;
 
+import pacman;
 import pacman.player;
 import pacman.globals;
 import pacman.grid;
@@ -28,6 +29,10 @@ void main()
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
+    
+    grid[vec2i(0, 2)] = TileType.WALL;
+    grid[vec2i(2, 0)] = TileType.WALL;
+    grid[vec2i(2, 2)] = TileType.WALL;
     
     while(true)
     {
