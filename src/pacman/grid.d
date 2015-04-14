@@ -44,14 +44,14 @@ final class Grid
             }
     }
     
-    bool solid(vec2i tilePos)
+    bool solid(inout vec2i tilePos)
     {
         TileType type = this[tilePos];
         
-        return type == TileType.WALL;
+        return type != TileType.NONE;
     }
     
-    ref TileType opIndex(vec2i tilePos)
+    ref TileType opIndex(inout vec2i tilePos)
     {
         size_t index = tilePos.y * height + tilePos.x;
         

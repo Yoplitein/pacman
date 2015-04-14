@@ -33,6 +33,7 @@ void main()
     grid[vec2i(0, 2)] = TileType.WALL;
     grid[vec2i(2, 0)] = TileType.WALL;
     grid[vec2i(2, 2)] = TileType.WALL;
+    grid[vec2i(3, 3)] = TileType.WALL;
     
     while(true)
     {

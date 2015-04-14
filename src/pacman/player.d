@@ -20,7 +20,7 @@ final class Player
     vec2i gridPosition = vec2i(0, 0); //position within the grid
     vec2 screenPosition = vec2(0, 0);
     vec2i wantedVelocity = vec2i(0, 0);
-    vec2 velocity = vec2(0, 0);
+    vec2i velocity = vec2i(0, 0);
     
     SDL2Texture[] animationFrames;
     SDL2Texture activeTexture;
@@ -105,17 +105,8 @@ final class Player
     
     void update_position()
     {
-        if(!moving && !startMoving)
+        if(!should_move)
             return;
-        
-        if(!moving && startMoving)
-        {
-            rotation = 180 + atan2(cast(real)wantedVelocity.y, cast(real)wantedVelocity.x).degrees;
-            velocity = wantedVelocity;
-            gridPosition += cast(vec2i)velocity;
-            startMoving = false;
-            moving = true;
-        }
         
         immutable newScreenPosition = (gridPosition + velocity) * TILE_SIZE;
         immutable diff = screenPosition - newScreenPosition;
@@ -130,7 +121,47 @@ final class Player
             return;
         }
         
-        screenPosition += velocity * PIXELS_PER_SECOND * timeDelta;
+        screenPosition += cast(vec2)velocity * PIXELS_PER_SECOND * timeDelta;
+    }
+    
+    bool should_move()
+    {
+        if(!moving && !startMoving)
+            return false;
+        
+        if(!moving && startMoving)
+        {
+            rotation = 180 + atan2(cast(real)wantedVelocity.y, cast(real)wantedVelocity.x).degrees;
+            startMoving = false;
+            immutable newPosition = gridPosition + wantedVelocity;
+            
+            if(!valid_position(newPosition))
+                return false;
+            
+            velocity = wantedVelocity;
+            gridPosition += velocity;
+            moving = true;
+        }
+        
+        return true;
+    }
+    
+    bool valid_position(vec2i newPosition)
+    {
+        if(newPosition.x < 0 || newPosition.x >= grid.width ||
+           newPosition.y < 0 || newPosition.y >= grid.height)
+            return false;
+        
+        if(grid.solid(newPosition))
+            return false;
+        
+        immutable dx = vec2i(wantedVelocity.x, 0);
+        immutable dy = vec2i(0, wantedVelocity.y);
+        
+        if(grid.solid(gridPosition + dx) && grid.solid(gridPosition + dy))
+            return false;
+        
+        return true;
     }
     
     void render()
