@@ -18,6 +18,7 @@ class Player
     enum PIXELS_PER_SECOND = TILE_SIZE * 3.5;
     
     vec2 position = vec2(0, 0);
+    vec2 velocity = vec2(0, 0);
     SDL2Texture[] animationFrames;
     SDL2Texture activeTexture;
     uint textureIndex;
@@ -42,7 +43,28 @@ class Player
     
     void update()
     {
-        vec2 velocity = vec2(0, 0);
+        update_velocity;
+        
+        position += timeDelta * velocity * PIXELS_PER_SECOND;
+        
+        if(animate && timeSeconds - lastAnimationTime > ANIMATION_DELAY)
+        {
+            if(increment)
+                textureIndex++;
+            else
+                textureIndex--;
+            
+            if(textureIndex == 0 || textureIndex == animationFrames.length - 1)
+                increment = !increment;
+            
+            activeTexture = animationFrames[textureIndex];
+            lastAnimationTime = timeSeconds;
+        }
+    }
+    
+    void update_velocity()
+    {
+        velocity = vec2(0, 0);
         bool update;
         
         if(sdl.keyboard.isPressed(SDLK_LEFT))
@@ -70,27 +92,9 @@ class Player
         }
         
         if(update)
-            update_rotation(velocity);
+            rotation = 180 + atan2(velocity.y, velocity.x).degrees;
         
         animate = update; //only animate when moving
-        position += timeDelta * velocity * PIXELS_PER_SECOND;
-        
-        if(!animate)
-            return;
-        
-        if(timeSeconds - lastAnimationTime > ANIMATION_DELAY)
-        {
-            if(increment)
-                textureIndex++;
-            else
-                textureIndex--;
-            
-            if(textureIndex == 0 || textureIndex == animationFrames.length - 1)
-                increment = !increment;
-            
-            activeTexture = animationFrames[textureIndex];
-            lastAnimationTime = timeSeconds;
-        }
     }
     
     void render()
@@ -109,10 +113,5 @@ class Player
             &rotOrigin,
             SDL_FLIP_NONE
         );
-    }
-    
-    void update_rotation(vec2 velocity)
-    {
-        rotation = 180 + atan2(velocity.y, velocity.x).degrees;
     }
 }
