@@ -15,7 +15,7 @@ class Player
 {
     enum NUM_TEXTURES = 16;
     enum ANIMATION_DELAY = 0.015;
-    enum TILES_PER_SECOND = 1;
+    enum PIXELS_PER_SECOND = TILE_SIZE * 3.5;
     
     vec2 position = vec2(0, 0);
     SDL2Texture[] animationFrames;
@@ -69,11 +69,11 @@ class Player
             update = true;
         }
         
-        animate = update; //only animate when moving
-        position += velocity * vec2(TILES_PER_SECOND, TILES_PER_SECOND) * 0.05; //TODO: time delta
-        
         if(update)
             update_rotation(velocity);
+        
+        animate = update; //only animate when moving
+        position += timeDelta * velocity * PIXELS_PER_SECOND;
         
         if(!animate)
             return;

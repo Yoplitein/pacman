@@ -11,3 +11,4 @@ SDLImage sdlImage;
 SDL2Window window;
 SDL2Renderer renderer;
 real timeSeconds;
+real timeDelta;
