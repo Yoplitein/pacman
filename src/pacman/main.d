@@ -55,6 +55,11 @@ void main()
             lastTitleUpdate = timeSeconds;
         }
         
+        renderer.setViewport(
+            WIDTH / 2 - cast(int)player.screenPosition.x,
+            HEIGHT / 2 - cast(int)player.screenPosition.y,
+            WIDTH, HEIGHT
+        );
         renderer.clear;
         grid.render;
         player.update;
