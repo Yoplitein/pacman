@@ -5,7 +5,7 @@ import gfm.sdl2;
 import pacman.texture;
 import pacman.globals;
 
-class Grid
+final class Grid
 {
     SDL2Texture texture;
     
@@ -27,9 +27,15 @@ class Grid
         foreach(y; 0 .. tilesY - 1)
             foreach(x; 0 .. tilesX - 1)
             {
-                if(y != 0 && y != tilesY - 2)
-                    if(x != 0 && x != tilesX - 2)
-                        continue;
+                int target;
+                
+                if(y % 2 == 0)
+                    target = 0;
+                else
+                    target = 1;
+                
+                if(x % 2 == target)
+                    continue;
                 
                 renderer.copy(texture, x * TILE_SIZE, y * TILE_SIZE);
             }

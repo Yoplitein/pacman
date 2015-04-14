@@ -23,8 +23,8 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     ); scope(exit) renderer.close;
-    Grid grid = new Grid; scope(exit) grid.destroy;
-    Player player = new Player; scope(exit) player.destroy;
+    grid = new Grid; scope(exit) grid.destroy;
+    player = new Player; scope(exit) player.destroy;
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
