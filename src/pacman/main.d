@@ -6,9 +6,7 @@ import gfm.sdl2;
 
 import pacman.player;
 import pacman.globals;
-
-enum WIDTH = 800;
-enum HEIGHT = 600;
+import pacman.grid;
 
 void main()
 {
@@ -25,19 +23,22 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED
     ); scope(exit) renderer.close;
+    Grid grid = new Grid; scope(exit) grid.destroy;
     Player player = new Player; scope(exit) player.destroy;
     
     while(true)
     {
         sdl.processEvents;
         
-        if(sdl.keyboard.isPressed(SDLK_ESCAPE))
+        if(sdl.wasQuitRequested || sdl.keyboard.isPressed(SDLK_ESCAPE))
             break;
         
+        timeSeconds = SDL_GetTicks() / 1000.0L;
+        
         renderer.clear;
+        grid.render;
         player.update;
         player.render;
-        //renderer.copy(texture, 100, 100);
         renderer.present;
     }
 }

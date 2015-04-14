@@ -1,22 +1,30 @@
 module pacman.player;
 
+import std.experimental.logger;
+import std.math;
 import std.string;
 
 import gfm.sdl2;
+import gfm.math: degrees;
 
+import pacman;
 import pacman.texture;
 import pacman.globals;
 
 class Player
 {
     enum NUM_TEXTURES = 16;
-    enum ANIMATION_DELAY = 15;
+    enum ANIMATION_DELAY = 0.015;
+    enum TILES_PER_SECOND = 1;
+    
+    vec2 position = vec2(0, 0);
     SDL2Texture[] animationFrames;
     SDL2Texture activeTexture;
     uint textureIndex;
     bool animate = true;
     bool increment = true;
-    uint lastAnimationStep;
+    real lastAnimationTime = 0;
+    real rotation = 0;
     
     this()
     {
@@ -34,12 +42,43 @@ class Player
     
     void update()
     {
-        uint now = SDL_GetTicks();
+        vec2 velocity = vec2(0, 0);
+        bool update;
+        
+        if(sdl.keyboard.isPressed(SDLK_LEFT))
+        {
+            velocity.x -= 1;
+            update = true;
+        }
+        
+        if(sdl.keyboard.isPressed(SDLK_RIGHT))
+        {
+            velocity.x += 1;
+            update = true;
+        }
+        
+        if(sdl.keyboard.isPressed(SDLK_UP))
+        {
+            velocity.y -= 1;
+            update = true;
+        }
+        
+        if(sdl.keyboard.isPressed(SDLK_DOWN))
+        {
+            velocity.y += 1;
+            update = true;
+        }
+        
+        animate = update; //only animate when moving
+        position += velocity * vec2(TILES_PER_SECOND, TILES_PER_SECOND) * 0.05; //TODO: time delta
+        
+        if(update)
+            update_rotation(velocity);
         
         if(!animate)
             return;
         
-        if(now - lastAnimationStep > ANIMATION_DELAY)
+        if(timeSeconds - lastAnimationTime > ANIMATION_DELAY)
         {
             if(increment)
                 textureIndex++;
@@ -50,12 +89,30 @@ class Player
                 increment = !increment;
             
             activeTexture = animationFrames[textureIndex];
-            lastAnimationStep = now;
+            lastAnimationTime = timeSeconds;
         }
     }
     
     void render()
     {
-        renderer.copy(activeTexture, 100, 100);
+        const width = activeTexture.width;
+        const height = activeTexture.height;
+        auto src = SDL_Rect(0, 0, width, height);
+        auto dst = SDL_Rect(cast(int)position.x, cast(int)position.y, width, height);
+        auto rotOrigin = SDL_Point(cast(int)(width * 0.5L), cast(int)(height * 0.5L));
+        
+        renderer.copyEx(
+            activeTexture,
+            src,
+            dst,
+            rotation,
+            &rotOrigin,
+            SDL_FLIP_NONE
+        );
+    }
+    
+    void update_rotation(vec2 velocity)
+    {
+        rotation = 180 + atan2(velocity.y, velocity.x).degrees;
     }
 }
