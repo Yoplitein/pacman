@@ -150,8 +150,8 @@ final class Player
     
     bool valid_position(vec2i newPosition)
     {
-        if(newPosition.x < 0 || newPosition.x >= grid.width ||
-           newPosition.y < 0 || newPosition.y >= grid.height)
+        if(newPosition.x < 0 || newPosition.x >= grid.size.x ||
+           newPosition.y < 0 || newPosition.y >= grid.size.y)
             return false;
         
         if(grid.solid(newPosition))
