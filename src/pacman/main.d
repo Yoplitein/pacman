@@ -37,6 +37,7 @@ void main()
     real lastTitleUpdate = 0;
     
     grid.load("res/map.json");
+    player.set_position(grid.playerSpawn);
     
     while(true)
     {

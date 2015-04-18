@@ -49,6 +49,15 @@ final class Player
             texture.close;
     }
     
+    void set_position(vec2i gridPosition)
+    {
+        this.gridPosition = gridPosition;
+        this.screenPosition = vec2(
+            gridPosition.x * TILE_SIZE,
+            gridPosition.y * TILE_SIZE
+        );
+    }
+    
     void update()
     {
         update_velocity;
