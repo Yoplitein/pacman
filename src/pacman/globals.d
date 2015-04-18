@@ -7,7 +7,8 @@ import pacman.player;
 
 enum WIDTH = 800;
 enum HEIGHT = 600;
-enum TILE_SIZE = 32;
+enum TEXTURE_SIZE = 32;
+enum TILE_SIZE = TEXTURE_SIZE;
 
 SDL2 sdl;
 SDLImage sdlImage;

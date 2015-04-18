@@ -42,6 +42,10 @@ SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA888
     auto formatData = get_format_data(pixelFormat);
     auto surfaceRaw = sdlImage.load(path); scope(exit) surfaceRaw.close;
     auto surface = surfaceRaw.convert(&formatData); scope(exit) surface.close;
+    
+    assert(surface.width == TEXTURE_SIZE);
+    assert(surface.height == TEXTURE_SIZE);
+    
     auto result = new SDL2Texture(
         renderer,
         pixelFormat,

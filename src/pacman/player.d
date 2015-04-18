@@ -115,6 +115,7 @@ final class Player
         
         if(absDiff.x <= epsilon && absDiff.y <= epsilon)
         {
+            animate = false;
             moving = false;
             screenPosition = gridPosition * TILE_SIZE;
             
@@ -141,6 +142,7 @@ final class Player
             velocity = wantedVelocity;
             gridPosition += velocity;
             moving = true;
+            animate = true;
         }
         
         return true;
