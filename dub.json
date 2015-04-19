@@ -4,8 +4,8 @@
     "copyright": "Copyright © 2015, Steven",
     "authors": ["Steven"],
     "dependencies": {
-        "gfm:logger": ">=2.0.15",
-        "gfm:sdl2": ">=2.0.15",
-        "gfm:math": ">=2.0.15",
+        "gfm:logger": ">=2.0.16",
+        "gfm:sdl2": ">=2.0.16",
+        "gfm:math": ">=2.0.16",
     },
 }
