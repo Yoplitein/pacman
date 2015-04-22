@@ -71,9 +71,9 @@ final class Grid
             switch(tileID.integer)
             {
                 case TileType.PLAYER_SPAWN:
-                    int x = index % size.x;
-                    int y = index / size.x;
-                    playerSpawn = vec2i(x, y);
+                    size_t x = index % size.x;
+                    size_t y = index / size.x;
+                    playerSpawn = vec2i(cast(int)x, cast(int)y);
                     tileID = JSONValue(cast(int)TileType.FLOOR);
                     
                     goto default;

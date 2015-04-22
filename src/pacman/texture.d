@@ -53,7 +53,7 @@ SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA888
         surface.width, surface.height
     );
     
-    result.updateTexture(surface.pixels, surface.pitch);
+    result.updateTexture(surface.pixels, cast(int)surface.pitch);
     result.setBlendMode(SDL_BLENDMODE_BLEND);
     
     return result;

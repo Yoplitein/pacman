@@ -7,3 +7,4 @@ __dummy.html
 *.exe
 *.dll
 *.sublime-*
+/pacman
