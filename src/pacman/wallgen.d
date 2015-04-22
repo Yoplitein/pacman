@@ -11,70 +11,78 @@ import gfm.sdl2;
 import pacman;
 import pacman.globals;
 
-SDL2Texture[Wall] wallTextures;
+SDL2Texture[WallShape] wallTextures;
 private SDL2Surface renderTarget;
 private SDL2Renderer lineRenderer;
 
 enum Direction
 {
     NORTH,
-    NORTH_EAST,
-    NORTH_WEST,
     EAST,
     SOUTH,
-    SOUTH_EAST,
-    SOUTH_WEST,
     WEST,
+    NORTH_EAST,
+    SOUTH_EAST,
+    NORTH_WEST,
+    SOUTH_WEST,
 }
 
-struct Wall
+struct WallShape
 {
-    immutable Direction[] endpoints;
-    alias endpoints this;
+    private Direction[] _endpoints;
     
     @disable this();
     
-    //sorts the array so the hashes work out properly in the texure map
+    //sorts the array so the hashes work out properly in the texture map
     this(inout Direction[] endpoints)
     {
-        enforce(endpoints.length >= 2);
-        
         Direction[] intermediate = endpoints.dup;
-        
-        this.endpoints = std.algorithm.sort(intermediate).array;
+        //info("pre: ", intermediate);
+        _endpoints = std.algorithm.sort(intermediate).array;
+        //info("post: ", _endpoints);
     }
     
+    const(Direction[]) endpoints()
+    {
+        return _endpoints;
+    }
 }
 
 private vec2i coordinates(Direction direction)
 {
     vec2 floating()
     {
+        immutable north = vec2(0, -0.5);
+        immutable east = vec2(0.5, 0);
+        immutable south = vec2(0, 0.5);
+        immutable west = vec2(-0.5, 0);
+        immutable origin = vec2(0.5, 0.5);
+        
         final switch(direction) with(Direction)
         {
             case NORTH:
-                return vec2(0.5, 0);
+                return origin + north;
             case NORTH_EAST:
-                return vec2(1, 0);
+                return origin + north + east;
             case NORTH_WEST:
-                return vec2(0, 0);
+                return origin + north + west;
             case EAST:
-                return vec2(1, 0.5);
+                return origin + east;
             case SOUTH:
-                return vec2(0.5, 1);
+                return origin + south;
             case SOUTH_EAST:
-                return vec2(1, 1);
+                return origin + south + east;
             case SOUTH_WEST:
-                return vec2(0, 1);
+                return origin + south + west;
             case WEST:
-                return vec2(0, 0.5);
+                return origin + west;
         }
     }
     
     return cast(vec2i)(floating * TILE_SIZE);
 }
 
-private void generate_texture(Wall wall)
+private void generate_texture(WallShape wall)
 {
     immutable midPos = cast(vec2i)(vec2(0.5, 0.5) * TILE_SIZE);
     
@@ -82,15 +90,15 @@ private void generate_texture(Wall wall)
     lineRenderer.clear;
     lineRenderer.setColor(0, 140, 255, 255);
     
-    foreach(endpoint; wall)
+    foreach(endpoint; wall.endpoints)
     {
         vec2i endPos = endpoint.coordinates;
         
-        lineRenderer.drawLine(endPos.x, endPos.y, midPos.x, midPos.y);
+        lineRenderer.drawLine(midPos.x, midPos.y, endPos.x, endPos.y);
     }
     
     lineRenderer.present;
-    
+    info("Generated texture for ", wall);
     
     wallTextures[wall] = new SDL2Texture(renderer, renderTarget);
 }
@@ -115,7 +123,7 @@ void generate_wall_textures()
         
         while(choices.length > 0)
         {
-            Wall wall = Wall([start] ~ choices);
+            WallShape wall = WallShape([start] ~ choices);
             choices = choices[1 .. $];
             
             if(wall !in wallTextures)

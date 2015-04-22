@@ -8,3 +8,4 @@ __dummy.html
 *.dll
 *.sublime-*
 /pacman
+/scratchpad.d
