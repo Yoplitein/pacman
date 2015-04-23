@@ -8,12 +8,12 @@ import pacman.globals;
 class Creature
 {
     
-    vec2i gridPosition = vec2i(0, 0);
-    vec2 screenPosition = vec2(0, 0);
+    vec2i gridPosition = vec2i(0, 0); //position in tiles
+    vec2 screenPosition = vec2(0, 0); //position in pixels
     vec2i wantedVelocity = vec2i(0, 0); //velocity for next movement action
     vec2i velocity = vec2i(0, 0); //current movement velocity
     
-    real speed = TILE_SIZE * 3.5; //speed of movement, in tiles per second
+    real speed = TILE_SIZE * 3.5; //speed of movement, in pixels per second
     bool startMoving = false; //whether to begin movement
     bool moving = false; //whether movement is currently happening
     

@@ -1,11 +1,14 @@
 module pacman.ghost;
 
+import std.random;
+
 import gfm.sdl2;
 
 import pacman;
 import pacman.creature;
 import pacman.texture;
 import pacman.globals;
+import pacman.grid;
 
 final class Ghost: Creature
 {
@@ -13,9 +16,8 @@ final class Ghost: Creature
     static SDL2Texture bodyTexture;
     static SDL2Texture eyesTexture;
     static SDL2Texture eyesBackgroundTexture;
-    bool drawBody = true;
-    real lastSwitch = 0;
     vec3i color;
+    vec2i eyesOffset;
     
     this(vec3i color)
     {
@@ -27,6 +29,7 @@ final class Ghost: Creature
         }
         
         textureRefcount++;
+        speed = TILE_SIZE * 4.0;
         this.color = color;
     }
     
@@ -46,24 +49,35 @@ final class Ghost: Creature
     {
         super.update;
         
-        if(timeSeconds - lastSwitch > 0.25)
+        if(!moving && !startMoving)
         {
-            lastSwitch = timeSeconds;
-            drawBody = !drawBody;
+            Direction[] availableDirections;
+            
+            foreach(direction, offset; grid.directionOffsets)
+                if(grid.exists(gridPosition + offset))
+                    availableDirections ~= direction;
+            
+            if(availableDirections.length == 0)
+                return;
+            
+            wantedVelocity = grid.directionOffsets[availableDirections[uniform(0, $)]];
+            eyesOffset = cast(vec2i)(wantedVelocity * vec2(2, 3));
+            startMoving = true;
         }
     }
     
     override void render()
     {
-        immutable vec2i screenPos = gridPosition * TILE_SIZE;
+        immutable x = cast(int)screenPosition.x;
+        immutable y = cast(int)screenPosition.y;
         
         bodyTexture.setColorMod(
             cast(ubyte)color.r,
             cast(ubyte)color.g,
             cast(ubyte)color.b,
         );
-        renderer.copy(eyesBackgroundTexture, screenPos.x, screenPos.y);
-        renderer.copy(bodyTexture, screenPos.x, screenPos.y);
-        renderer.copy(eyesTexture, screenPos.x, screenPos.y);
+        renderer.copy(eyesBackgroundTexture, x, y);
+        renderer.copy(bodyTexture, x, y);
+        renderer.copy(eyesTexture, x + eyesOffset.x, y + eyesOffset.y);
     }
 }
