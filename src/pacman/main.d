@@ -7,9 +7,10 @@ import gfm.logger;
 import gfm.sdl2;
 
 import pacman;
-import pacman.player;
+import pacman.ghost;
 import pacman.globals;
 import pacman.grid;
+import pacman.player;
 import pacman.texture;
 
 SDL2Texture backgroundTexture;
@@ -32,6 +33,7 @@ void main()
     backgroundTexture = load_texture("res/background.png"); scope(exit) backgroundTexture.close;
     grid = new Grid; scope(exit) grid.destroy;
     player = new Player; scope(exit) player.destroy;
+    ghost = new Ghost; scope(exit) ghost.destroy;
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
@@ -64,6 +66,8 @@ void main()
         draw_background;
         center_viewport;
         grid.render;
+        ghost.update;
+        ghost.render;
         player.update;
         player.render;
         renderer.present;

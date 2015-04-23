@@ -4,6 +4,7 @@ import gfm.sdl2;
 
 import pacman.grid;
 import pacman.player;
+import pacman.ghost;
 
 enum WIDTH = 800;
 enum HEIGHT = 600;
@@ -16,5 +17,6 @@ SDL2Window window;
 SDL2Renderer renderer;
 Grid grid;
 Player player;
+Ghost ghost;
 real timeSeconds;
 real timeDelta;
