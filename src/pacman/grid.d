@@ -11,7 +11,6 @@ import gfm.sdl2;
 import pacman;
 import pacman.texture;
 import pacman.globals;
-import pacman.wallgen;
 
 enum TileType
 {
@@ -24,10 +23,19 @@ enum TileType
     max, //special value to test validity in to_tile_type
 }
 
+enum Direction
+{
+    NORTH,
+    EAST,
+    SOUTH,
+    WEST,
+    NONE,
+}
+
 struct Tile
 {
     TileType type;
-    WallShape shape = WallShape.init;
+    Direction[] adjacentWalls = null;
 }
 
 TileType to_tile_type(long value)
@@ -39,8 +47,9 @@ TileType to_tile_type(long value)
 
 final class Grid
 {
-    immutable  vec2i[Direction] directionOffsets;
+    vec2i[Direction] directionOffsets;
     SDL2Texture[TileType] textures;
+    SDL2Texture[Direction] wallTextures;
     vec2i size;
     vec2i playerSpawn;
     Tile[] tiles;
@@ -51,29 +60,28 @@ final class Grid
         immutable east = vec2i(1, 0);
         immutable south = vec2i(0, 1);
         immutable west = vec2i(-1, 0);
-        vec2i[Direction] offsets;
-        offsets[Direction.NORTH] = north;
-        offsets[Direction.EAST] = east;
-        offsets[Direction.SOUTH] = south;
-        offsets[Direction.WEST] = west;
-        offsets[Direction.NORTH_EAST] = north + east;
-        offsets[Direction.NORTH_WEST] = north + west;
-        offsets[Direction.SOUTH_EAST] = south + east;
-        offsets[Direction.SOUTH_WEST] = south + west;
+        directionOffsets[Direction.NORTH] = north;
+        directionOffsets[Direction.EAST] = east;
+        directionOffsets[Direction.SOUTH] = south;
+        directionOffsets[Direction.WEST] = west;
         textures[TileType.WALL] = load_texture("res/wall.png");
         textures[TileType.FLOOR] = load_texture("res/floor.png");
         textures[TileType.TASTY_FLOOR] = load_texture("res/tasty_floor.png");
         textures[TileType.max] = load_texture("res/missing.png");
+        wallTextures[Direction.NORTH] = load_texture("res/wall_north.png");
+        wallTextures[Direction.EAST] = load_texture("res/wall_east.png");
+        wallTextures[Direction.SOUTH] = load_texture("res/wall_south.png");
+        wallTextures[Direction.WEST] = load_texture("res/wall_west.png");
+        wallTextures[Direction.NONE] = load_texture("res/wall_middle.png");
         
-        offsets.rehash;
+        directionOffsets.rehash;
         textures.rehash;
-        
-        directionOffsets = offsets.assumeUnique;
+        wallTextures.rehash;
     }
     
     ~this()
     {
-        foreach(texture; textures.values)
+        foreach(texture; textures.values ~ wallTextures.values)
             texture.close;
     }
     
@@ -127,12 +135,7 @@ final class Grid
                         adjacentWalls ~= direction;
                 }
                 
-                tile.shape = WallShape(adjacentWalls);
-                
-                infof("wall at %s has adjacent walls %s", pos, tile.shape.endpoints);
-                
-                if(tile.shape !in wallTextures)
-                    warning("No texture for ", tile.shape);
+                tile.adjacentWalls = adjacentWalls;
             }
     }
     
@@ -141,36 +144,37 @@ final class Grid
         foreach(y; 0 .. size.y)
             foreach(x; 0 .. size.x)
             {
+                void blit(SDL2Texture texture)
+                {
+                    renderer.copy(texture, x * TILE_SIZE, y * TILE_SIZE);
+                }
+                
                 Tile *tile = this[vec2i(x, y)];
-                SDL2Texture texture;
                 
                 switch(tile.type) with(TileType)
                 {
                     case WALL:
-                        auto item = tile.shape in wallTextures;
+                        renderer.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        blit(wallTextures[Direction.NONE]);
                         
-                        if(item is null)
-                        {
-                            //warning("Missing texture for shape ", tile.shape);
-                            
-                            goto default;
-                        }
+                        if(tile.adjacentWalls.length == 0)
+                            break;
                         else
-                            texture = *item;
+                            foreach(direction; tile.adjacentWalls)
+                                blit(wallTextures[direction]);
                         
                         break;
                     case FLOOR:
                     case TASTY_FLOOR:
-                        texture = textures[tile.type];
+                        blit(textures[tile.type]);
                         
                         break;
+                    case NONE:
                     case PLAYER_SPAWN:
                         continue;
                     default:
-                        texture = textures[TileType.max];
+                        blit(textures[TileType.max]);
                 }
-                
-                renderer.copy(texture, x * TILE_SIZE, y * TILE_SIZE);
             }
     }
     
@@ -181,9 +185,10 @@ final class Grid
     
     bool exists(inout vec2i position)
     {
-        immutable index = coords_to_index(position);
-        
-        return index >= 0 && index < tiles.length;
+        return
+            position.x >= 0 && position.x < size.x &&
+            position.y >= 0 && position.y < size.y
+        ;
     }
     
     bool solid(inout vec2i position)

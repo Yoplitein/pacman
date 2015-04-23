@@ -11,7 +11,6 @@ import pacman.player;
 import pacman.globals;
 import pacman.grid;
 import pacman.texture;
-import pacman.wallgen;
 
 SDL2Texture backgroundTexture;
 
@@ -37,7 +36,6 @@ void main()
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
-    generate_wall_textures; scope(exit) cleanup_wall_textures;
     grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
     

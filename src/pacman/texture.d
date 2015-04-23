@@ -1,10 +1,13 @@
 module pacman.texture;
 
 import std.experimental.logger;
+import std.file;
 
 import gfm.sdl2;
 
 import pacman.globals;
+
+private SDL2Texture missingTexture;
 
 SDL_PixelFormat get_format_data(uint format)
 {
@@ -37,6 +40,16 @@ SDL_PixelFormat get_format_data(uint format)
 
 SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
 {
+    if(!path.exists)
+    {
+        warningf("Texture %s does not exist!", path);
+        
+        if(missingTexture is null)
+            missingTexture = load_texture("res/missing.png");
+        
+        return missingTexture;
+    }
+    
     info("Loading texture ", path);
     
     auto formatData = get_format_data(pixelFormat);
