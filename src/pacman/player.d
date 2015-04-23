@@ -10,6 +10,7 @@ import gfm.math: degrees;
 import pacman;
 import pacman.texture;
 import pacman.globals;
+import pacman.grid;
 
 final class Player
 {
@@ -128,6 +129,8 @@ final class Player
             moving = false;
             screenPosition = gridPosition * TILE_SIZE;
             
+            done_moving;
+            
             return;
         }
         
@@ -173,6 +176,14 @@ final class Player
             return false;
         
         return true;
+    }
+    
+    void done_moving()
+    {
+        Tile *currentTile = grid[gridPosition];
+        
+        if(currentTile.type == TileType.TASTY_FLOOR)
+            currentTile.type = TileType.FLOOR;
     }
     
     void render()
