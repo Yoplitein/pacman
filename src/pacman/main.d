@@ -33,13 +33,14 @@ void main()
     backgroundTexture = load_texture("res/background.png"); scope(exit) backgroundTexture.close;
     grid = new Grid; scope(exit) grid.destroy;
     player = new Player; scope(exit) player.destroy;
-    ghost = new Ghost; scope(exit) ghost.destroy;
+    ghost = new Ghost(vec3i(255, 0, 255)); scope(exit) ghost.destroy;
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
     grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
+    ghost.set_position(grid.playerSpawn);
     
     while(true)
     {
