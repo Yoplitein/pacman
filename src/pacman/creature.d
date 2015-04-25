@@ -14,6 +14,7 @@ class Creature
     vec2i velocity = vec2i(0, 0); //current movement velocity
     
     real speed = TILE_SIZE * 3.5; //speed of movement, in pixels per second
+    bool ignoreWalls = false; //whether to ignore walls when moving
     bool startMoving = false; //whether to begin movement
     bool moving = false; //whether movement is currently happening
     
@@ -74,18 +75,18 @@ class Creature
     
     bool valid_position(vec2i newPosition)
     {
-        if(newPosition.x < 0 || newPosition.x >= grid.size.x ||
-           newPosition.y < 0 || newPosition.y >= grid.size.y)
+        if(!grid.exists(newPosition))
             return false;
         
-        if(grid.solid(newPosition))
+        if(!ignoreWalls && grid.solid(newPosition))
             return false;
         
         immutable dx = vec2i(wantedVelocity.x, 0);
         immutable dy = vec2i(0, wantedVelocity.y);
         
-        if(grid.solid(gridPosition + dx) && grid.solid(gridPosition + dy))
-            return false;
+        if(!ignoreWalls)
+            if(grid.solid(gridPosition + dx) && grid.solid(gridPosition + dy))
+                return false;
         
         return true;
     }

@@ -3,6 +3,7 @@ module pacman.ghost;
 import std.experimental.logger;
 import std.random;
 import std.algorithm;
+import std.math;
 
 import gfm.sdl2;
 
@@ -70,6 +71,46 @@ class WanderAI: BaseAI
     }
 }
 
+class SimplePathingAI: BaseAI
+{
+    mixin AIConstructor;
+    
+    override Direction next_direction()
+    {
+        immutable start = ghost.gridPosition;
+        immutable goal = player.gridPosition;
+        immutable currentDistance = distance(start, goal);
+        Direction result;
+        
+        if(currentDistance < 1)
+            return Direction.NONE;
+        
+        foreach(direction, offset; directionOffsets)
+        {
+            immutable next = start + offset;
+            
+            if(!grid.exists(next))
+                continue;
+            
+            immutable nextDistance = distance(next, goal);
+            
+            if(nextDistance < currentDistance)
+            {
+                result = direction;
+                
+                break;
+            }
+        }
+        
+        return result;
+    }
+    
+    static real distance(vec2i a, vec2i b)
+    {
+        return sqrt(cast(real)(a.x - b.x) ^^ 2 + cast(real)(a.y - b.y) ^^ 2);
+    }
+}
+
 final class Ghost: Creature
 {
     static int textureRefcount = 0;
@@ -90,9 +131,10 @@ final class Ghost: Creature
         }
         
         textureRefcount++;
-        speed = TILE_SIZE * 4.0;
+        speed = TILE_SIZE * 2.95;
+        ignoreWalls = true;
         this.color = color;
-        ai = new WanderAI(this);
+        ai = new SimplePathingAI(this);
     }
     
     ~this()
