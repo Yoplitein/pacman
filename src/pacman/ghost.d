@@ -111,6 +111,112 @@ class SimplePathingAI: BaseAI
     }
 }
 
+class PathingAI: BaseAI
+{
+    Direction[] path;
+    vec2i goal = vec2i(-1, -1);
+    
+    struct HashableVector
+    {
+        vec2i data;
+        
+        size_t toHash() const nothrow @safe
+        {
+            enum prime1 = 73856093;
+            enum prime2 = 19349663;
+            enum modulo = size_t.max;
+            
+            return ((data.x * prime1) ^ (data.y * prime2)) % modulo;
+        }
+    }
+    
+    mixin AIConstructor;
+    
+    override Direction next_direction()
+    {
+        if(goal != player.gridPosition)
+        {
+            goal = player.gridPosition;
+            
+            find_path;
+        }
+        
+        if(path.length == 0)
+            return Direction.NONE;
+        
+        Direction result = path[0];
+        path = path[1 .. $];
+        
+        return result;
+    }
+    
+    void find_path()
+    {
+        static immutable directions = [
+            Direction.NORTH,
+            Direction.EAST,
+            Direction.SOUTH,
+            Direction.WEST,
+        ];
+        vec2i position = ghost.gridPosition;
+        path.length = 0;
+        bool[HashableVector] visited = [HashableVector(position): true];
+        size_t count;
+        
+        while(true)
+        {
+            if(count++ > 5000)
+            {
+                warning("Could not find a path: timed out");
+                
+                path.length = 0;
+                
+                break;
+            }
+            
+            if(position == goal)
+                break;
+            
+            real currentCost = real.max;
+            Direction bestDirection = Direction.NONE;
+            vec2i nextPosition = position;
+            
+            foreach(direction; directions)
+            {
+                immutable offset = directionOffsets[direction];
+                immutable newPosition = position + offset;
+                
+                if(HashableVector(newPosition) in visited)
+                    continue;
+                
+                if(!grid.exists(newPosition) || grid.solid(newPosition))
+                    continue;
+                
+                immutable cost = heuristic(newPosition, goal);
+                
+                if(cost < currentCost)
+                {
+                    currentCost = cost;
+                    bestDirection = direction;
+                    nextPosition = newPosition;
+                }
+            }
+            
+            if(bestDirection == Direction.NONE)
+                break;
+            
+            path ~= bestDirection;
+            position = nextPosition;
+            visited[HashableVector(position)] = true;
+        }
+    }
+    
+    static real heuristic(vec2i a, vec2i b)
+    {
+        return 10.0L * (abs(a.x - b.x) + abs(a.y - b.y));
+    }
+}
+
 final class Ghost: Creature
 {
     static int textureRefcount = 0;
@@ -131,10 +237,10 @@ final class Ghost: Creature
         }
         
         textureRefcount++;
-        speed = TILE_SIZE * 2.95;
-        ignoreWalls = true;
+        speed = TILE_SIZE * 2.5;
+        ignoreWalls = false;
         this.color = color;
-        ai = new SimplePathingAI(this);
+        ai = new PathingAI(this);
     }
     
     ~this()
