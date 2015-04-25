@@ -12,6 +12,30 @@ import pacman;
 import pacman.texture;
 import pacman.globals;
 
+immutable vec2i[Direction] directionOffsets;
+immutable Direction[Direction] directionReversals;
+
+static this()
+{
+    vec2i[Direction] offsets;
+    Direction[Direction] reversals;
+    offsets[Direction.NORTH] = vec2i(0, -1);
+    offsets[Direction.EAST] = vec2i(1, 0);
+    offsets[Direction.SOUTH] = vec2i(0, 1);
+    offsets[Direction.WEST] = vec2i(-1, 0);
+    offsets[Direction.NONE] = vec2i(0, 0);
+    reversals[Direction.NORTH] = Direction.SOUTH;
+    reversals[Direction.EAST] = Direction.WEST;
+    reversals[Direction.SOUTH] = Direction.NORTH;
+    reversals[Direction.WEST] = Direction.EAST;
+    
+    offsets.rehash;
+    reversals.rehash;
+    
+    directionOffsets = offsets.assumeUnique;
+    directionReversals = reversals.assumeUnique;
+}
+
 enum TileType
 {
     NONE,
@@ -47,7 +71,6 @@ TileType to_tile_type(long value)
 
 final class Grid
 {
-    vec2i[Direction] directionOffsets;
     SDL2Texture[TileType] textures;
     SDL2Texture[Direction] wallTextures;
     vec2i size;
@@ -56,14 +79,6 @@ final class Grid
     
     this()
     {
-        immutable north = vec2i(0, -1);
-        immutable east = vec2i(1, 0);
-        immutable south = vec2i(0, 1);
-        immutable west = vec2i(-1, 0);
-        directionOffsets[Direction.NORTH] = north;
-        directionOffsets[Direction.EAST] = east;
-        directionOffsets[Direction.SOUTH] = south;
-        directionOffsets[Direction.WEST] = west;
         textures[TileType.WALL] = load_texture("res/wall.png");
         textures[TileType.FLOOR] = load_texture("res/floor.png");
         textures[TileType.TASTY_FLOOR] = load_texture("res/tasty_floor.png");
@@ -74,7 +89,6 @@ final class Grid
         wallTextures[Direction.WEST] = load_texture("res/wall_west.png");
         wallTextures[Direction.NONE] = load_texture("res/wall_middle.png");
         
-        directionOffsets.rehash;
         textures.rehash;
         wallTextures.rehash;
     }

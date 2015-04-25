@@ -1,6 +1,8 @@
 module pacman.ghost;
 
+import std.experimental.logger;
 import std.random;
+import std.algorithm;
 
 import gfm.sdl2;
 
@@ -10,6 +12,64 @@ import pacman.texture;
 import pacman.globals;
 import pacman.grid;
 
+mixin template AIConstructor()
+{
+    this(Ghost ghost)
+    {
+        this.ghost = ghost;
+    }
+}
+
+class BaseAI
+{
+    Ghost ghost;
+    
+    abstract Direction next_direction();
+}
+
+class WanderAI: BaseAI
+{
+    Direction lastDirection = Direction.NONE;
+    
+    mixin AIConstructor;
+    
+    override Direction next_direction()
+    {
+        Direction[] availableDirections;
+        
+        foreach(direction, offset; directionOffsets)
+            if(direction != Direction.NONE)
+            {
+                immutable newPosition = ghost.gridPosition + offset;
+                
+                if(grid.exists(newPosition) && !grid.solid(newPosition))
+                    availableDirections ~= direction;
+            }
+        
+        if(availableDirections.length == 0)
+            return Direction.NONE;
+        
+        if(availableDirections.length > 1)
+            if(lastDirection != Direction.NONE)
+            {
+                foreach(index, direction; availableDirections)
+                {
+                    if(directionReversals[direction] == lastDirection)
+                    {
+                        availableDirections = availableDirections.remove(index);
+                        
+                        break;
+                    }
+                }
+            }
+        
+        Direction selectedDirection = availableDirections[uniform(0, $)];
+        lastDirection = selectedDirection;
+        
+        return selectedDirection;
+    }
+}
+
 final class Ghost: Creature
 {
     static int textureRefcount = 0;
@@ -18,6 +78,7 @@ final class Ghost: Creature
     static SDL2Texture eyesBackgroundTexture;
     vec3i color;
     vec2i eyesOffset;
+    BaseAI ai;
     
     this(vec3i color)
     {
@@ -31,6 +92,7 @@ final class Ghost: Creature
         textureRefcount++;
         speed = TILE_SIZE * 4.0;
         this.color = color;
+        ai = new WanderAI(this);
     }
     
     ~this()
@@ -51,16 +113,7 @@ final class Ghost: Creature
         
         if(!moving && !startMoving)
         {
-            Direction[] availableDirections;
-            
-            foreach(direction, offset; grid.directionOffsets)
-                if(grid.exists(gridPosition + offset))
-                    availableDirections ~= direction;
-            
-            if(availableDirections.length == 0)
-                return;
-            
-            wantedVelocity = grid.directionOffsets[availableDirections[uniform(0, $)]];
+            wantedVelocity = directionOffsets[ai.next_direction];
             eyesOffset = cast(vec2i)(wantedVelocity * vec2(2, 3));
             startMoving = true;
         }
