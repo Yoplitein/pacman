@@ -43,6 +43,7 @@ enum TileType
     FLOOR,
     TASTY_FLOOR, //floor with a dot
     PLAYER_SPAWN,
+    GHOST_SPAWN,
     
     max, //special value to test validity in to_tile_type
 }
@@ -75,6 +76,7 @@ final class Grid
     SDL2Texture[Direction] wallTextures;
     vec2i size;
     vec2i playerSpawn;
+    vec2i[] ghostSpawns;
     Tile[] tiles;
     
     this()
@@ -114,13 +116,21 @@ final class Grid
         infof("Map is %d by %d, tile data is of length %d (expecting %d)", size.x, size.y, mapData.length, tiles.length);
         enforce(mapData.length == tiles.length, "Map data has invalid length");
         
+        vec2i coords(size_t index)
+        {
+            return vec2i(cast(int)(index % size.x), cast(int)(index / size.x));
+        }
+        
         foreach(tileID; mapData)
             switch(tileID.integer)
             {
                 case TileType.PLAYER_SPAWN:
-                    size_t x = index % size.x;
-                    size_t y = index / size.x;
-                    playerSpawn = vec2i(cast(int)x, cast(int)y);
+                    playerSpawn = coords(index);
+                    tileID = JSONValue(cast(int)TileType.FLOOR);
+                    
+                    goto default;
+                case TileType.GHOST_SPAWN:
+                    ghostSpawns ~= coords(index);
                     tileID = JSONValue(cast(int)TileType.FLOOR);
                     
                     goto default;
@@ -185,6 +195,7 @@ final class Grid
                         break;
                     case NONE:
                     case PLAYER_SPAWN:
+                    case GHOST_SPAWN:
                         continue;
                     default:
                         blit(textures[TileType.max]);

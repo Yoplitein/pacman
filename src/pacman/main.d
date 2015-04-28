@@ -40,7 +40,7 @@ void main()
     
     grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
-    ghost.set_position(grid.playerSpawn);
+    ghost.set_position(grid.ghostSpawns[0]);
     
     while(true)
     {
