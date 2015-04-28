@@ -219,7 +219,6 @@ class PathingAI: BaseAI
 
 final class Ghost: Creature
 {
-    static int textureRefcount = 0;
     static SDL2Texture bodyTexture;
     static SDL2Texture eyesTexture;
     static SDL2Texture eyesBackgroundTexture;
@@ -231,28 +230,15 @@ final class Ghost: Creature
     {
         if(bodyTexture is null)
         {
-            bodyTexture = load_texture("res/ghost_body.png");
-            eyesTexture = load_texture("res/ghost_eyes.png");
-            eyesBackgroundTexture = load_texture("res/ghost_eyes_background.png");
+            bodyTexture = get_texture("res/ghost_body.png");
+            eyesTexture = get_texture("res/ghost_eyes.png");
+            eyesBackgroundTexture = get_texture("res/ghost_eyes_background.png");
         }
         
-        textureRefcount++;
         speed = TILE_SIZE * 2.5;
         ignoreWalls = false;
         this.color = color;
         ai = new PathingAI(this);
-    }
-    
-    ~this()
-    {
-        textureRefcount--;
-        
-        if(textureRefcount <= 0)
-        {
-            bodyTexture.close;
-            eyesTexture.close;
-            eyesBackgroundTexture.close;
-        }
     }
     
     override void update()

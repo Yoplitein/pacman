@@ -30,10 +30,10 @@ void main()
         window,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     ); scope(exit) renderer.close;
-    backgroundTexture = load_texture("res/background.png"); scope(exit) backgroundTexture.close;
-    grid = new Grid; scope(exit) grid.destroy;
-    player = new Player; scope(exit) player.destroy;
-    ghost = new Ghost(vec3i(255, 0, 255)); scope(exit) ghost.destroy;
+    backgroundTexture = get_texture("res/background.png");
+    grid = new Grid;
+    player = new Player;
+    ghost = new Ghost(vec3i(255, 0, 255));
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
@@ -73,6 +73,8 @@ void main()
         player.render;
         renderer.present;
     }
+    
+    close_textures;
 }
 
 void reset_viewport()

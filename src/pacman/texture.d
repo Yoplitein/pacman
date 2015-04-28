@@ -8,8 +8,9 @@ import gfm.sdl2;
 import pacman.globals;
 
 private SDL2Texture missingTexture;
+private SDL2Texture[string] loadedTextures;
 
-SDL_PixelFormat get_format_data(uint format)
+private SDL_PixelFormat get_format_data(uint format)
 {
     SDL_PixelFormat result;
     int bpp;
@@ -38,10 +39,17 @@ SDL_PixelFormat get_format_data(uint format)
     return result;
 }
 
-SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
+private SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
 {
     if(!path.exists)
     {
+        if(path == "res/missing.png")
+        {
+            fatal("Missing texture is missing!");
+            
+            return null;
+        }
+        
         warningf("Texture %s does not exist!", path);
         
         if(missingTexture is null)
@@ -65,9 +73,26 @@ SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA888
         SDL_TEXTUREACCESS_STATIC,
         surface.width, surface.height
     );
+    loadedTextures[path] = result;
     
     result.updateTexture(surface.pixels, cast(int)surface.pitch);
     result.setBlendMode(SDL_BLENDMODE_BLEND);
     
     return result;
+}
+
+SDL2Texture get_texture(string path)
+{
+    auto texture = path in loadedTextures;
+    
+    if(texture)
+        return *texture;
+    else
+        return load_texture(path);
+}
+
+void close_textures()
+{
+    foreach(texture; loadedTextures.values)
+        texture.close;
 }

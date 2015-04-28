@@ -18,7 +18,7 @@ final class Player: Creature
     enum NUM_TEXTURES = 16;
     enum ANIMATION_DELAY = 0.015;
     
-    SDL2Texture[] animationFrames;
+    SDL2Texture[NUM_TEXTURES] animationFrames;
     SDL2Texture activeTexture;
     
     uint textureIndex;
@@ -29,15 +29,9 @@ final class Player: Creature
     this()
     {
         foreach(index; 0 .. NUM_TEXTURES)
-            animationFrames ~= load_texture("res/player%d.png".format(index));
+            animationFrames[index] = get_texture("res/player%d.png".format(index));
         
         activeTexture = animationFrames[0];
-    }
-    
-    ~this()
-    {
-        foreach(texture; animationFrames)
-            texture.close;
     }
     
     override void update()
@@ -51,7 +45,7 @@ final class Player: Creature
             else
                 textureIndex--;
             
-            if(textureIndex == 0 || textureIndex == animationFrames.length - 1)
+            if(textureIndex == 0 || textureIndex == NUM_TEXTURES - 1)
                 incrementTexture = !incrementTexture;
             
             activeTexture = animationFrames[textureIndex];

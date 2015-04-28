@@ -81,24 +81,18 @@ final class Grid
     
     this()
     {
-        textures[TileType.WALL] = load_texture("res/wall.png");
-        textures[TileType.FLOOR] = load_texture("res/floor.png");
-        textures[TileType.TASTY_FLOOR] = load_texture("res/tasty_floor.png");
-        textures[TileType.max] = load_texture("res/missing.png");
-        wallTextures[Direction.NORTH] = load_texture("res/wall_north.png");
-        wallTextures[Direction.EAST] = load_texture("res/wall_east.png");
-        wallTextures[Direction.SOUTH] = load_texture("res/wall_south.png");
-        wallTextures[Direction.WEST] = load_texture("res/wall_west.png");
-        wallTextures[Direction.NONE] = load_texture("res/wall_middle.png");
+        textures[TileType.WALL] = get_texture("res/wall.png");
+        textures[TileType.FLOOR] = get_texture("res/floor.png");
+        textures[TileType.TASTY_FLOOR] = get_texture("res/tasty_floor.png");
+        textures[TileType.max] = get_texture("res/missing.png");
+        wallTextures[Direction.NORTH] = get_texture("res/wall_north.png");
+        wallTextures[Direction.EAST] = get_texture("res/wall_east.png");
+        wallTextures[Direction.SOUTH] = get_texture("res/wall_south.png");
+        wallTextures[Direction.WEST] = get_texture("res/wall_west.png");
+        wallTextures[Direction.NONE] = get_texture("res/wall_middle.png");
         
         textures.rehash;
         wallTextures.rehash;
-    }
-    
-    ~this()
-    {
-        foreach(texture; textures.values ~ wallTextures.values)
-            texture.close;
     }
     
     void load(string path)
