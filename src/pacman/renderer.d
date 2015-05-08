@@ -8,6 +8,7 @@ import gfm.opengl;
 
 import pacman;
 import pacman.globals;
+import pacman.texture;
 
 struct Vertex
 {
@@ -117,8 +118,21 @@ class Renderer
         texture.close;
     }
     
+    void copy(TextureData data, int x, int y)
+    {
+        infof("renderer copying texture %s to %d, %d", data.path, x, y);
+        
+        data.texture.use;
+        program.uniform("model").set(
+            mat4.translation(vec3f(cast(float)x, cast(float)y, 0)) *
+            mat4.scaling(vec3f(data.width, data.height, 0))
+        );
+        glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
+    }
+    
     void draw()
     {
+        texture.use;
         glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
     }
 }
@@ -127,3 +141,4 @@ private string[] read_lines(string filename)
 {
     return filename.readText.split("\n");
 }
+

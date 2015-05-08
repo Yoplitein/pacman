@@ -18,8 +18,8 @@ final class Player: Creature
     enum NUM_TEXTURES = 16;
     enum ANIMATION_DELAY = 0.015;
     
-    SDL2Texture[NUM_TEXTURES] animationFrames;
-    SDL2Texture activeTexture;
+    TextureData[NUM_TEXTURES] animationFrames;
+    TextureData activeTexture;
     
     uint textureIndex;
     bool incrementTexture = true;
@@ -106,13 +106,16 @@ final class Player: Creature
         auto dst = SDL_Rect(cast(int)screenPosition.x, cast(int)screenPosition.y, width, height);
         auto rotOrigin = SDL_Point(cast(int)(width * 0.5L), cast(int)(height * 0.5L));
         
-        renderer.copyEx(
+        //TODO: rotation
+        renderer.copy(
             activeTexture,
-            src,
+            cast(int)screenPosition.x,
+            cast(int)screenPosition.y
+            /*src,
             dst,
             rotation,
             &rotOrigin,
-            SDL_FLIP_NONE
+            SDL_FLIP_NONE*/
         );
     }
 }

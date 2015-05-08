@@ -4,13 +4,27 @@ import std.experimental.logger;
 import std.file;
 
 import gfm.sdl2;
+import gfm.opengl;
 
 import pacman.globals;
 
-private SDL2Texture missingTexture;
-private SDL2Texture[string] loadedTextures;
+private TextureData missingTexture;
+private TextureData[string] loadedTextures;
 
-SDL_PixelFormat get_format_data(uint format) //TOOD: private again
+struct TextureData
+{
+    private GLTexture2D _texture;
+    string path;
+    int width;
+    int height;
+    
+    @property GLTexture2D texture()
+    {
+        return _texture;
+    }
+}
+
+SDL_PixelFormat get_format_data(uint format)
 {
     SDL_PixelFormat result;
     int bpp;
@@ -39,37 +53,49 @@ SDL_PixelFormat get_format_data(uint format) //TOOD: private again
     return result;
 }
 
-private SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
+private TextureData load_texture(string path)
 {
     if(!path.exists)
         fatal("Attempted to load missing texture: ", path);
     
     info("Caching texture ", path);
     
+    version(LittleEndian)
+        enum pixelFormat = SDL_PIXELFORMAT_ABGR8888;
+    else version(BigEndian)
+        enum pixelFormat = SDL_PIXELFORMAT_RGBA8888;
+    else
+        static assert(false, "Unknown architecture");
+    
     auto formatData = get_format_data(pixelFormat);
-    auto surfaceRaw = sdlImage.load(path); scope(exit) surfaceRaw.close;
-    auto surface = surfaceRaw.convert(&formatData); scope(exit) surface.close;
+    auto rawSurface = sdlImage.load(path); scope(exit) rawSurface.close;
+    auto surface = rawSurface.convert(&formatData); scope(exit) surface.close;
     
     assert(surface.width == TEXTURE_SIZE);
     assert(surface.height == TEXTURE_SIZE);
     
-    auto result = new SDL2Texture(
-        renderer,
-        pixelFormat,
-        SDL_TEXTUREACCESS_STATIC,
-        surface.width, surface.height
+    auto texture = new GLTexture2D(opengl);
+    TextureData data = TextureData(
+        texture,
+        path,
+        surface.width,
+        surface.height
     );
-    loadedTextures[path] = result;
+    loadedTextures[path] = data;
     
-    result.updateTexture(surface.pixels, cast(int)surface.pitch);
-    result.setBlendMode(SDL_BLENDMODE_BLEND);
+    texture.setMinFilter(GL_NEAREST_MIPMAP_NEAREST);
+    texture.setMagFilter(GL_NEAREST);
+    texture.setWrapS(GL_REPEAT);
+    texture.setWrapT(GL_REPEAT);
+    texture.setImage(0, GL_RGBA, surface.width, surface.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface.pixels);
+    texture.generateMipmap;
     
-    return result;
+    return data;
 }
 
-SDL2Texture get_texture(string path)
+TextureData get_texture(string path)
 {
-    if(!missingTexture)
+    if(!missingTexture.texture)
         missingTexture = load_texture("res/missing.png");
     
     if(!path.exists)
@@ -79,16 +105,16 @@ SDL2Texture get_texture(string path)
         return missingTexture;
     }
     
-    auto texture = path in loadedTextures;
+    auto textureData = path in loadedTextures;
     
-    if(texture)
-        return *texture;
+    if(textureData)
+        return *textureData;
     else
         return load_texture(path);
 }
 
 void close_textures()
 {
-    foreach(texture; loadedTextures.values)
-        texture.close;
+    foreach(data; loadedTextures.values)
+        data.texture.close;
 }

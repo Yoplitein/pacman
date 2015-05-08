@@ -219,16 +219,16 @@ class PathingAI: BaseAI
 
 final class Ghost: Creature
 {
-    static SDL2Texture bodyTexture;
-    static SDL2Texture eyesTexture;
-    static SDL2Texture eyesBackgroundTexture;
+    static TextureData bodyTexture;
+    static TextureData eyesTexture;
+    static TextureData eyesBackgroundTexture;
     vec3i color;
     vec2i eyesOffset;
     BaseAI ai;
     
     this(vec3i color)
     {
-        if(bodyTexture is null)
+        if(bodyTexture.texture is null)
         {
             bodyTexture = get_texture("res/ghost_body.png");
             eyesTexture = get_texture("res/ghost_eyes.png");
@@ -258,11 +258,12 @@ final class Ghost: Creature
         immutable x = cast(int)screenPosition.x;
         immutable y = cast(int)screenPosition.y;
         
-        bodyTexture.setColorMod(
+        //TODO: color mask
+        /*bodyTexture.setColorMod(
             cast(ubyte)color.r,
             cast(ubyte)color.g,
             cast(ubyte)color.b,
-        );
+        );*/
         renderer.copy(eyesBackgroundTexture, x, y);
         renderer.copy(bodyTexture, x, y);
         renderer.copy(eyesTexture, x + eyesOffset.x, y + eyesOffset.y);

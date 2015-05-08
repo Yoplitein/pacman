@@ -72,8 +72,8 @@ TileType to_tile_type(long value)
 
 final class Grid
 {
-    SDL2Texture[TileType] textures;
-    SDL2Texture[Direction] wallTextures;
+    TextureData[TileType] textures;
+    TextureData[Direction] wallTextures;
     vec2i size;
     vec2i playerSpawn;
     vec2i[] ghostSpawns;
@@ -162,7 +162,7 @@ final class Grid
         foreach(y; 0 .. size.y)
             foreach(x; 0 .. size.x)
             {
-                void blit(SDL2Texture texture)
+                void blit(TextureData texture)
                 {
                     renderer.copy(texture, x * TILE_SIZE, y * TILE_SIZE);
                 }
@@ -172,7 +172,8 @@ final class Grid
                 switch(tile.type) with(TileType)
                 {
                     case WALL:
-                        renderer.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        //TODO: rect filling
+                        //renderer.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         blit(wallTextures[Direction.NONE]);
                         
                         if(tile.adjacentWalls.length == 0)

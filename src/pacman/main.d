@@ -39,9 +39,9 @@ void main()
     opengl.reload;
     init_opengl;
     
-    glRenderer = new Renderer; scope(exit) glRenderer.close;
+    renderer = new Renderer; scope(exit) renderer.close;
     //grid = new Grid;
-    //player = new Player;
+    player = new Player;
     //ghost = new Ghost(vec3i(255, 0, 255));
     uint frames;
     real lastFrameTime = 0;
@@ -51,11 +51,11 @@ void main()
     //player.set_position(grid.playerSpawn);
     //ghost.set_position(grid.ghostSpawns[0]);
     
-    glRenderer.program.uniform("model").set(
+    renderer.program.uniform("model").set(
         mat4.translation(vec3f(15, 15, 0)) *
         mat4.scaling(vec3f(200, 200, 1))
     );
-    glRenderer.program.uniform("activeTexture").set(0);
+    renderer.program.uniform("activeTexture").set(0);
     
     while(true)
     {
@@ -84,11 +84,11 @@ void main()
         //grid.render;
         //ghost.update;
         //ghost.render;
-        //player.update;
-        //player.render;
         //renderer.present;
         glClear(GL_COLOR_BUFFER_BIT);
-        glRenderer.draw;
+        player.update;
+        player.render;
+        //renderer.draw;
         window.swapBuffers;
     }
     
@@ -102,7 +102,7 @@ void init_opengl()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void reset_viewport()
+/*void reset_viewport()
 {
     renderer.setViewport(0, 0, WIDTH, HEIGHT);
 }
@@ -114,9 +114,9 @@ void center_viewport()
         HEIGHT / 2 - cast(int)player.screenPosition.y,
         WIDTH, HEIGHT
     );
-}
+}*/
 
-void draw_background()
+/*void draw_background()
 {
     immutable xMax = cast(int)ceil(WIDTH / cast(real)TEXTURE_SIZE);
     immutable yMax = cast(int)ceil(HEIGHT / cast(real)TEXTURE_SIZE);
@@ -124,4 +124,4 @@ void draw_background()
     foreach(y; 0 .. yMax)
         foreach(x; 0 .. xMax)
             renderer.copy(backgroundTexture, x * TEXTURE_SIZE, y * TEXTURE_SIZE);
-}
+}*/
