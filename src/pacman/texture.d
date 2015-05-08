@@ -42,23 +42,9 @@ private SDL_PixelFormat get_format_data(uint format)
 private SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT_RGBA8888)
 {
     if(!path.exists)
-    {
-        if(path == "res/missing.png")
-        {
-            fatal("Missing texture is missing!");
-            
-            return null;
-        }
-        
-        warningf("Texture %s does not exist!", path);
-        
-        if(missingTexture is null)
-            missingTexture = load_texture("res/missing.png");
-        
-        return missingTexture;
-    }
+        fatal("Attempted to load missing texture: ", path);
     
-    info("Loading texture ", path);
+    info("Caching texture ", path);
     
     auto formatData = get_format_data(pixelFormat);
     auto surfaceRaw = sdlImage.load(path); scope(exit) surfaceRaw.close;
@@ -83,6 +69,16 @@ private SDL2Texture load_texture(string path, uint pixelFormat = SDL_PIXELFORMAT
 
 SDL2Texture get_texture(string path)
 {
+    if(!missingTexture)
+        missingTexture = load_texture("res/missing.png");
+    
+    if(!path.exists)
+    {
+        warningf("Texture %s does not exist, using fallback texture", path);
+        
+        return missingTexture;
+    }
+    
     auto texture = path in loadedTextures;
     
     if(texture)
