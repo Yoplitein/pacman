@@ -99,11 +99,6 @@ class Renderer
             0, HEIGHT,
             0.0, 5.0,
         );
-        view = mat4.lookAt(
-            vec3f(0.0, 0.0, 1.0),
-            vec3f(0.0, 0.0, 0.0),
-            vec3f(0.0, 1.0, 0.0),
-        );
         
         _program.uniform("projection").set(projection);
         _program.uniform("view").set(view);
@@ -119,6 +114,20 @@ class Renderer
         _program.close;
         buffer.close;
         texture.close;
+    }
+    
+    void update()
+    {
+        immutable scaledPlayerPosition = player.screenPosition - vec2(WIDTH - TEXTURE_SIZE + 2, HEIGHT + TEXTURE_SIZE / 2) / vec2(2, 2);
+        immutable viewTarget = vec3f(scaledPlayerPosition, 0);
+        
+        view = mat4.lookAt(
+            viewTarget + vec3f(0, 0, 1),
+            viewTarget,
+            vec3f(0, 1, 0),
+        );
+        
+        program.uniform("view").set(view);
     }
     
     void copy(TextureData data, int x, int y, real rotation = 0, vec3i color = vec3i(255, 255, 255))
