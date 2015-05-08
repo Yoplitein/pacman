@@ -120,8 +120,6 @@ class Renderer
     
     void copy(TextureData data, int x, int y)
     {
-        infof("renderer copying texture %s to %d, %d", data.path, x, y);
-        
         data.texture.use;
         program.uniform("model").set(
             mat4.translation(vec3f(cast(float)x, cast(float)y, 0)) *

@@ -72,13 +72,13 @@ final class Player: Creature
         
         if(sdl.keyboard.isPressed(SDLK_UP))
         {
-            wantedVelocity.y -= 1;
+            wantedVelocity.y += 1;
             any = true;
         }
         
         if(sdl.keyboard.isPressed(SDLK_DOWN))
         {
-            wantedVelocity.y += 1;
+            wantedVelocity.y -= 1;
             any = true;
         }
         

@@ -19,9 +19,9 @@ static this()
 {
     vec2i[Direction] offsets;
     Direction[Direction] reversals;
-    offsets[Direction.NORTH] = vec2i(0, -1);
+    offsets[Direction.NORTH] = vec2i(0, 1);
     offsets[Direction.EAST] = vec2i(1, 0);
-    offsets[Direction.SOUTH] = vec2i(0, 1);
+    offsets[Direction.SOUTH] = vec2i(0, -1);
     offsets[Direction.WEST] = vec2i(-1, 0);
     offsets[Direction.NONE] = vec2i(0, 0);
     reversals[Direction.NORTH] = Direction.SOUTH;
@@ -85,9 +85,9 @@ final class Grid
         textures[TileType.FLOOR] = get_texture("res/floor.png");
         textures[TileType.TASTY_FLOOR] = get_texture("res/tasty_floor.png");
         textures[TileType.max] = get_texture("res/missing.png");
-        wallTextures[Direction.NORTH] = get_texture("res/wall_north.png");
+        wallTextures[Direction.SOUTH] = get_texture("res/wall_north.png");
         wallTextures[Direction.EAST] = get_texture("res/wall_east.png");
-        wallTextures[Direction.SOUTH] = get_texture("res/wall_south.png");
+        wallTextures[Direction.NORTH] = get_texture("res/wall_south.png");
         wallTextures[Direction.WEST] = get_texture("res/wall_west.png");
         wallTextures[Direction.NONE] = get_texture("res/wall_middle.png");
         
@@ -112,9 +112,10 @@ final class Grid
         
         vec2i coords(size_t index)
         {
-            return vec2i(cast(int)(index % size.x), cast(int)(index / size.x));
+            return vec2i(cast(int)(index % size.x), size.y - 1 - cast(int)(index / size.x));
         }
         
+        //fill in tile data
         foreach(tileID; mapData)
             switch(tileID.integer)
             {
@@ -132,6 +133,7 @@ final class Grid
                     tiles[index++] = Tile(tileID.integer.to_tile_type);
             }
         
+        //calculate adjacent walls
         foreach(y; 0 .. size.y)
             foreach(x; 0 .. size.x)
             {
@@ -200,7 +202,7 @@ final class Grid
     
     size_t coords_to_index(inout vec2i position)
     {
-        return position.y * size.y + position.x;
+        return (size.y - 1 - position.y) * size.y + position.x;
     }
     
     bool exists(inout vec2i position)

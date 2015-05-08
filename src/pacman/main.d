@@ -40,15 +40,15 @@ void main()
     init_opengl;
     
     renderer = new Renderer; scope(exit) renderer.close;
-    //grid = new Grid;
+    grid = new Grid;
     player = new Player;
     //ghost = new Ghost(vec3i(255, 0, 255));
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
-    //grid.load("res/map.json");
-    //player.set_position(grid.playerSpawn);
+    grid.load("res/map.json");
+    player.set_position(grid.playerSpawn);
     //ghost.set_position(grid.ghostSpawns[0]);
     
     renderer.program.uniform("model").set(
@@ -77,15 +77,11 @@ void main()
             lastTitleUpdate = timeSeconds;
         }
         
-        //renderer.clear;
-        //reset_viewport;
+        glClear(GL_COLOR_BUFFER_BIT);
         //draw_background;
-        //center_viewport;
-        //grid.render;
+        grid.render;
         //ghost.update;
         //ghost.render;
-        //renderer.present;
-        glClear(GL_COLOR_BUFFER_BIT);
         player.update;
         player.render;
         //renderer.draw;
