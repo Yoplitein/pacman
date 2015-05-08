@@ -85,9 +85,9 @@ final class Grid
         textures[TileType.FLOOR] = get_texture("res/floor.png");
         textures[TileType.TASTY_FLOOR] = get_texture("res/tasty_floor.png");
         textures[TileType.max] = get_texture("res/missing.png");
-        wallTextures[Direction.SOUTH] = get_texture("res/wall_north.png");
+        wallTextures[Direction.NORTH] = get_texture("res/wall_north.png");
         wallTextures[Direction.EAST] = get_texture("res/wall_east.png");
-        wallTextures[Direction.NORTH] = get_texture("res/wall_south.png");
+        wallTextures[Direction.SOUTH] = get_texture("res/wall_south.png");
         wallTextures[Direction.WEST] = get_texture("res/wall_west.png");
         wallTextures[Direction.NONE] = get_texture("res/wall_middle.png");
         

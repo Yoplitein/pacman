@@ -42,14 +42,14 @@ void main()
     renderer = new Renderer; scope(exit) renderer.close;
     grid = new Grid;
     player = new Player;
-    //ghost = new Ghost(vec3i(255, 0, 255));
+    ghost = new Ghost(vec3i(255, 0, 255));
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
     grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
-    //ghost.set_position(grid.ghostSpawns[0]);
+    ghost.set_position(grid.ghostSpawns[0]);
     
     renderer.program.uniform("model").set(
         mat4.translation(vec3f(15, 15, 0)) *
@@ -80,8 +80,8 @@ void main()
         glClear(GL_COLOR_BUFFER_BIT);
         //draw_background;
         grid.render;
-        //ghost.update;
-        //ghost.render;
+        ghost.update;
+        ghost.render;
         player.update;
         player.render;
         //renderer.draw;

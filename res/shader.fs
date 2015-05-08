@@ -8,5 +8,6 @@ uniform sampler2D activeTexture;
 
 void main()
 {
-    outColor = texture(activeTexture, fragmentTextureCoordinate);
+    vec2 correctedCoordinate = vec2(fragmentTextureCoordinate.x, 1 - fragmentTextureCoordinate.y);
+    outColor = texture(activeTexture, correctedCoordinate);
 }
