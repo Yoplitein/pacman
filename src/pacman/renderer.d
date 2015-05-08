@@ -5,6 +5,7 @@ import std.file;
 import std.string;
 
 import gfm.opengl;
+import gfm.math: radians;
 
 import pacman;
 import pacman.globals;
@@ -31,10 +32,12 @@ class Renderer
             auto vertexShaderSource = read_lines("res/shader.vs");
             auto fragmentShaderSource = read_lines("res/shader.fs");
             
-            info("vertex shader source: ", vertexShaderSource);
-            info("fragment shader source: ", fragmentShaderSource);
+            info("Loading vertex shader");
             
             auto vertexShader = new GLShader(opengl, GL_VERTEX_SHADER, vertexShaderSource); scope(exit) vertexShader.close;
+            
+            info("Loading fragment shader");
+            
             auto fragmentShader = new GLShader(opengl, GL_FRAGMENT_SHADER, fragmentShaderSource); scope(exit) fragmentShader.close;
             _program = new GLProgram(opengl, [vertexShader, fragmentShader]);
             
@@ -118,12 +121,22 @@ class Renderer
         texture.close;
     }
     
-    void copy(TextureData data, int x, int y)
+    void copy(TextureData data, int x, int y, real rotation = 0, vec3i color = vec3i(255, 255, 255))
     {
         data.texture.use;
         program.uniform("model").set(
             mat4.translation(vec3f(cast(float)x, cast(float)y, 0)) *
+            mat4.translation(vec3f(data.width / 2f, data.height / 2f, 0)) *
+            mat4.rotation(rotation.radians, vec3f(0, 0, 1)) *
+            mat4.translation(vec3f(-data.width / 2f, -data.height / 2f, 0)) *
             mat4.scaling(vec3f(data.width, data.height, 0))
+        );
+        program.uniform("colorMask").set(
+            vec3f(
+                color.r / 255,
+                color.g / 255,
+                color.b / 255,
+            )
         );
         glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
     }

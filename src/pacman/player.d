@@ -24,7 +24,7 @@ final class Player: Creature
     uint textureIndex;
     bool incrementTexture = true;
     real lastAnimationTime = 0;
-    real rotation = 0;
+    real rotation = 0; //in degrees
     
     this()
     {
@@ -110,7 +110,8 @@ final class Player: Creature
         renderer.copy(
             activeTexture,
             cast(int)screenPosition.x,
-            cast(int)screenPosition.y
+            cast(int)screenPosition.y,
+            rotation
             /*src,
             dst,
             rotation,

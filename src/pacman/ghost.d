@@ -265,7 +265,7 @@ final class Ghost: Creature
             cast(ubyte)color.b,
         );*/
         renderer.copy(eyesBackgroundTexture, x, y);
-        renderer.copy(bodyTexture, x, y);
+        renderer.copy(bodyTexture, x, y, 0, color);
         renderer.copy(eyesTexture, x + eyesOffset.x, y + eyesOffset.y);
     }
 }
