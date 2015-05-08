@@ -10,7 +10,7 @@ import pacman.globals;
 private SDL2Texture missingTexture;
 private SDL2Texture[string] loadedTextures;
 
-private SDL_PixelFormat get_format_data(uint format)
+SDL_PixelFormat get_format_data(uint format) //TOOD: private again
 {
     SDL_PixelFormat result;
     int bpp;

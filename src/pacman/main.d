@@ -1,10 +1,12 @@
 import std.experimental.logger;
+import std.file;
 import std.math;
 import std.random;
 import std.string;
 
 import gfm.logger;
 import gfm.sdl2;
+import gfm.opengl;
 
 import pacman;
 import pacman.ghost;
@@ -12,6 +14,7 @@ import pacman.globals;
 import pacman.grid;
 import pacman.player;
 import pacman.texture;
+import pacman.renderer;
 
 SDL2Texture backgroundTexture;
 
@@ -20,27 +23,39 @@ void main()
     stdlog = new ConsoleLogger;
     sdl = new SDL2(stdlog); scope(exit) sdl.close;
     sdlImage = new SDLImage(sdl, IMG_INIT_PNG); scope(exit) sdlImage.close;
+    opengl = new OpenGL(stdlog); scope(exit) opengl.close;
     window = new SDL2Window(
         sdl,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WIDTH, HEIGHT,
-        0
+        SDL_WINDOW_OPENGL
     ); scope(exit) window.close;
-    renderer = new SDL2Renderer(
+    /*renderer = new SDL2Renderer(
         window,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-    ); scope(exit) renderer.close;
-    backgroundTexture = get_texture("res/background.png");
-    grid = new Grid;
-    player = new Player;
-    ghost = new Ghost(vec3i(255, 0, 255));
+    ); scope(exit) renderer.close;*/
+    //backgroundTexture = get_texture("res/background.png");
+    
+    opengl.reload;
+    init_opengl;
+    
+    glRenderer = new Renderer; scope(exit) glRenderer.close;
+    //grid = new Grid;
+    //player = new Player;
+    //ghost = new Ghost(vec3i(255, 0, 255));
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
-    grid.load("res/map.json");
-    player.set_position(grid.playerSpawn);
-    ghost.set_position(grid.ghostSpawns[0]);
+    //grid.load("res/map.json");
+    //player.set_position(grid.playerSpawn);
+    //ghost.set_position(grid.ghostSpawns[0]);
+    
+    glRenderer.program.uniform("model").set(
+        mat4.translation(vec3f(15, 15, 0)) *
+        mat4.scaling(vec3f(200, 200, 1))
+    );
+    glRenderer.program.uniform("activeTexture").set(0);
     
     while(true)
     {
@@ -62,19 +77,29 @@ void main()
             lastTitleUpdate = timeSeconds;
         }
         
-        renderer.clear;
-        reset_viewport;
-        draw_background;
-        center_viewport;
-        grid.render;
-        ghost.update;
-        ghost.render;
-        player.update;
-        player.render;
-        renderer.present;
+        //renderer.clear;
+        //reset_viewport;
+        //draw_background;
+        //center_viewport;
+        //grid.render;
+        //ghost.update;
+        //ghost.render;
+        //player.update;
+        //player.render;
+        //renderer.present;
+        glClear(GL_COLOR_BUFFER_BIT);
+        glRenderer.draw;
+        window.swapBuffers;
     }
     
     close_textures;
+}
+
+void init_opengl()
+{
+    glClearColor(0, 0, 0, 1);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void reset_viewport()
