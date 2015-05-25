@@ -110,22 +110,28 @@ final class Grid
         infof("Map is %d by %d, tile data is of length %d (expecting %d)", size.x, size.y, mapData.length, tiles.length);
         enforce(mapData.length == tiles.length, "Map data has invalid length");
         
-        vec2i coords(size_t index)
+        JSONValue[] transposed = new JSONValue[mapData.length];
+        
+        foreach(row; 0 .. size.y)
         {
-            return vec2i(cast(int)(index % size.x), size.y - 1 - cast(int)(index / size.x));
+            immutable dataStart = size.x * (size.y - 1 - row);
+            immutable dataEnd = dataStart + size.x;
+            immutable tposedStart = size.x * row;
+            immutable tposedEnd = tposedStart + size.x;
+            transposed[tposedStart .. tposedEnd] = mapData[dataStart .. dataEnd];
         }
         
         //fill in tile data
-        foreach(tileID; mapData)
+        foreach(tileID; transposed)
             switch(tileID.integer)
             {
                 case TileType.PLAYER_SPAWN:
-                    playerSpawn = coords(index);
+                    playerSpawn = index_to_coords(index);
                     tileID = JSONValue(cast(int)TileType.FLOOR);
                     
                     goto default;
                 case TileType.GHOST_SPAWN:
-                    ghostSpawns ~= coords(index);
+                    ghostSpawns ~= index_to_coords(index);
                     tileID = JSONValue(cast(int)TileType.FLOOR);
                     
                     goto default;
@@ -202,7 +208,12 @@ final class Grid
     
     size_t coords_to_index(inout vec2i position)
     {
-        return (size.y - 1 - position.y) * size.y + position.x;
+        return position.y * size.y + position.x;
+    }
+    
+    vec2i index_to_coords(size_t index)
+    {
+        return vec2i(cast(int)(index % size.x), cast(int)(index / size.x));
     }
     
     bool exists(inout vec2i position)
