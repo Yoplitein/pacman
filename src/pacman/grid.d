@@ -230,7 +230,7 @@ final class Grid
     
     size_t coords_to_index(inout vec2i position)
     {
-        return position.y * size.y + position.x;
+        return position.y * size.x + position.x;
     }
     
     vec2i index_to_coords(size_t index)
