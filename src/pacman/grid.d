@@ -1,5 +1,7 @@
 module pacman.grid;
 
+import std.algorithm;
+import std.array;
 import std.conv;
 import std.exception;
 import std.experimental.logger;
@@ -101,12 +103,15 @@ final class Grid
         
         auto text = path.readText;
         auto json = text.parseJSON;
-        size.x = cast(int)json["width"].integer;
-        size.y = cast(int)json["height"].integer;
-        tiles.length = size.x * size.y;
         size_t index;
         JSONValue[] mapData = json["tiles"].array;
         
+        reset(
+            vec2i(
+                cast(int)json["width"].integer,
+                cast(int)json["height"].integer,
+            )
+        );
         infof("Map is %d by %d, tile data is of length %d (expecting %d)", size.x, size.y, mapData.length, tiles.length);
         enforce(mapData.length == tiles.length, "Map data has invalid length");
         
@@ -121,48 +126,65 @@ final class Grid
             transposed[tposedStart .. tposedEnd] = mapData[dataStart .. dataEnd];
         }
         
-        //fill in tile data
-        foreach(tileID; transposed)
-            switch(tileID.integer)
+        tiles = transposed.map!(json => Tile(json.integer.to_tile_type)).array;
+        
+        bake;
+    }
+    
+    void reset(vec2i newSize)
+    {
+        size = newSize;
+        playerSpawn = playerSpawn.init;
+        ghostSpawns = ghostSpawns.init;
+        //reset all tile types to NONE
+        tiles.length = 0;
+        tiles.length = size.x * size.y;
+    }
+    
+    void bake()
+    {
+        foreach(index, ref tile; tiles)
+        {
+            immutable position = index_to_coords(index);
+            
+            //fill in data from special tile types
+            switch(tile.type)
             {
                 case TileType.PLAYER_SPAWN:
                     playerSpawn = index_to_coords(index);
-                    tileID = JSONValue(cast(int)TileType.FLOOR);
+                    tile.type = TileType.FLOOR;
                     
-                    goto default;
+                    break;
                 case TileType.GHOST_SPAWN:
                     ghostSpawns ~= index_to_coords(index);
-                    tileID = JSONValue(cast(int)TileType.FLOOR);
+                    tile.type = TileType.FLOOR;
                     
-                    goto default;
+                    break;
                 default:
-                    tiles[index++] = Tile(tileID.integer.to_tile_type);
             }
-        
-        //calculate adjacent walls
-        foreach(y; 0 .. size.y)
-            foreach(x; 0 .. size.x)
+            
+            //calculate adjacency data for wall tiles
+            Direction[] adjacentWalls;
+            
+            if(tile.type != TileType.WALL)
+                continue;
+            
+            foreach(direction, offset; directionOffsets)
             {
-                immutable pos = vec2i(x, y);
-                Tile *tile = this[pos];
-                Direction[] adjacentWalls;
+                immutable otherPos = position + offset;
                 
-                if(tile.type != TileType.WALL)
+                if(direction == Direction.NONE)
                     continue;
                 
-                foreach(direction, offset; directionOffsets)
-                {
-                    immutable otherPos = pos + offset;
-                    
-                    if(!exists(otherPos))
-                        continue;
-                    
-                    if(this[otherPos].type == TileType.WALL)
-                        adjacentWalls ~= direction;
-                }
+                if(!exists(otherPos))
+                    continue;
                 
-                tile.adjacentWalls = adjacentWalls;
+                if(this[otherPos].type == TileType.WALL)
+                    adjacentWalls ~= direction;
             }
+            
+            tile.adjacentWalls = adjacentWalls;
+        }
     }
     
     void render()
