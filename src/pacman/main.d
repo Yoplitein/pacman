@@ -1,3 +1,4 @@
+import core.thread;
 import std.experimental.logger;
 import std.file;
 import std.math;
@@ -15,6 +16,7 @@ import pacman.grid;
 import pacman.player;
 import pacman.texture;
 import pacman.renderer;
+import pacman.levelgen;
 
 SDL2Texture backgroundTexture;
 
@@ -46,10 +48,12 @@ void main()
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
+    auto generationFiber = new Fiber(&generate_level);
     
-    grid.load("res/map.json");
+    generationFiber.call;
+    //grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
-    ghost.set_position(grid.ghostSpawns[0]);
+    //ghost.set_position(grid.ghostSpawns[0]);
     
     renderer.program.uniform("model").set(
         mat4.translation(vec3f(15, 15, 0)) *
@@ -77,12 +81,25 @@ void main()
             lastTitleUpdate = timeSeconds;
         }
         
+        if(generationFiber.state != Fiber.State.TERM)
+            generationFiber.call;
+        else
+        {
+            if(sdl.keyboard.isPressed(SDLK_g))
+            {
+                generationFiber.reset;
+                generationFiber.call;
+                
+                player.set_position(grid.playerSpawn);
+            }
+        }
+        
         glClear(GL_COLOR_BUFFER_BIT);
         //draw_background;
         renderer.update;
         grid.render;
-        ghost.update;
-        ghost.render;
+        //ghost.update;
+        //ghost.render;
         player.update;
         player.render;
         //renderer.draw;
