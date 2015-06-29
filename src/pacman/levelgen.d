@@ -10,6 +10,31 @@ import pacman.globals;
 import pacman.grid;
 import pacman;
 
+//offsets for Neumann neighborhoods
+private immutable vec2i[] neumannOffsets;
+
+//offsets for Moore neighborhoods
+private immutable vec2i[] mooreOffsets;
+
+static this()
+{
+    vec2i[] neumann = [
+        directionOffsets[Direction.NORTH],
+        directionOffsets[Direction.EAST],
+        directionOffsets[Direction.SOUTH],
+        directionOffsets[Direction.WEST],
+    ];
+    vec2i[] moore = neumann ~ [
+        directionOffsets[Direction.NORTH] + directionOffsets[Direction.EAST],
+        directionOffsets[Direction.NORTH] + directionOffsets[Direction.WEST],
+        directionOffsets[Direction.SOUTH] + directionOffsets[Direction.EAST],
+        directionOffsets[Direction.SOUTH] + directionOffsets[Direction.WEST],
+    ];
+    
+    neumannOffsets = neumann.idup;
+    mooreOffsets = moore.idup;
+}
+
 private struct Update
 {
     vec2i position;
@@ -38,8 +63,10 @@ void generate_level()
     simulate;
     info("Shortening");
     shorten;
+    info("Punching");
+    punch;
     grid.bake;
-    info("\aLevel generated");
+    info("Level generated");
 }
 
 //set the starting shape for the level
@@ -147,6 +174,76 @@ private void shorten()
         
         foreach(y; 0 .. grid.size.y)
             loop_body(vec2i(x, y), maxWallsY, wallCount);
+        
+        yield;
+    }
+}
+
+//punch out walls that make dead ends
+private void punch()
+{
+    
+    foreach(y; 0 .. grid.size.y)
+    {
+        foreach(x; 0 .. grid.size.x)
+        {
+            immutable position = vec2i(x, y);
+            
+            if(position.on_edge)
+                continue;
+            
+            if(grid[position].type != TileType.TASTY_FLOOR)
+                continue;
+            
+            if(position.count_adjacent(TileType.TASTY_FLOOR, false) >= 2)
+                continue;
+            
+            immutable nearestWallOffset = position.find_adjacent(TileType.TASTY_FLOOR);
+            immutable idealOffset = -1 * nearestWallOffset;
+            
+            if(nearestWallOffset == vec2i(0, 0))
+            {
+                warningf("Floor at %s has no neighbors!", position);
+                
+                continue;
+            }
+            
+            //first try to continue the line of floors
+            immutable idealPosition = position + idealOffset;
+            
+            if(grid.exists(idealPosition) && !idealPosition.on_edge)
+                if(idealPosition.count_adjacent(TileType.TASTY_FLOOR, false) >= 2)
+                {
+                    grid[idealPosition].type = TileType.TASTY_FLOOR;
+                    
+                    continue;
+                }
+            
+            //try another direction otherwise
+            bool success;
+            
+            foreach(offset; neumannOffsets)
+            {
+                if(offset == nearestWallOffset || offset == idealOffset)
+                    continue;
+                
+                immutable newPosition = position + offset;
+                
+                if(!grid.exists(newPosition) || newPosition.on_edge)
+                    continue;
+                
+                if(newPosition.count_adjacent(TileType.TASTY_FLOOR, false) >= 3)
+                {
+                    grid[newPosition].type = TileType.TASTY_FLOOR;
+                    success = true;
+                    
+                    break;
+                }
+            }
+            
+            if(!success)
+                warning("Dead end!");
+        }
         
         yield;
     }
@@ -271,21 +368,11 @@ private bool needs_update(vec2i position, ref Update update)
     return false;
 }*/
 
-private size_t count_adjacent(vec2i position, TileType targetType)
+private size_t count_adjacent(vec2i position, TileType targetType, bool mooreNeighborhood = true)
 {
-    immutable mooreOffsets = [
-        directionOffsets[Direction.NORTH],
-        directionOffsets[Direction.EAST],
-        directionOffsets[Direction.SOUTH],
-        directionOffsets[Direction.WEST],
-        directionOffsets[Direction.NORTH] + directionOffsets[Direction.EAST],
-        directionOffsets[Direction.NORTH] + directionOffsets[Direction.WEST],
-        directionOffsets[Direction.SOUTH] + directionOffsets[Direction.EAST],
-        directionOffsets[Direction.SOUTH] + directionOffsets[Direction.WEST],
-    ];
     size_t count;
     
-    foreach(offset; mooreOffsets)
+    foreach(offset; mooreNeighborhood ? mooreOffsets : neumannOffsets)
     {
         immutable newPosition = position + offset;
         
@@ -299,6 +386,22 @@ private size_t count_adjacent(vec2i position, TileType targetType)
     }
     
     return count;
+}
+
+private vec2i find_adjacent(vec2i position, TileType targetType)
+{
+    foreach(offset; neumannOffsets)
+    {
+        immutable newPosition = position + offset;
+        
+        if(!grid.exists(newPosition))
+            continue;
+        
+        if(grid[newPosition].type == targetType)
+            return offset;
+    }
+    
+    return vec2i(0, 0);
 }
 
 private bool on_edge(vec2i position)
