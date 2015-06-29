@@ -32,12 +32,17 @@ void generate_level()
     
     grid.playerSpawn = vec2i(size.x / 2, size.y / 2);
     
+    info("Shaping");
     shape;
+    info("Simulating");
     simulate;
+    info("Shortening");
+    shorten;
     grid.bake;
     info("\aLevel generated");
 }
 
+//set the starting shape for the level
 private void shape()
 {
     foreach(y; 0 .. grid.size.y)
@@ -62,6 +67,7 @@ private void shape()
         }
 }
 
+//simulate the level as an automata, to smooth it out
 private void simulate()
 {
     size_t simulations = uniform(5, 25);
@@ -97,6 +103,52 @@ private void simulate()
             if(index % 10 == 0)
                 yield;
         }*/
+    }
+}
+
+//shorten really long walls
+private void shorten()
+{
+    immutable maxWallsX = grid.size.x / 4;
+    immutable maxWallsY = grid.size.y / 4;
+    
+    static void loop_body(immutable vec2i position, immutable uint maxWalls, ref uint wallCount)
+    {
+        if(position.on_edge)
+            return;
+        
+        if(grid[position].type == TileType.WALL)
+            wallCount++;
+        else
+            wallCount = 0;
+        
+        if(wallCount > maxWalls)
+        {
+            grid[position].type = TileType.TASTY_FLOOR;
+            wallCount = 0;
+        }
+    }
+    
+    //shorten walls on the x axis
+    foreach(y; 0 .. grid.size.y)
+    {
+        uint wallCount;
+        
+        foreach(x; 0 .. grid.size.x)
+            loop_body(vec2i(x, y), maxWallsX, wallCount);
+        
+        yield;
+    }
+    
+    //shorten walls on the y axis
+    foreach(x; 0 .. grid.size.x)
+    {
+        uint wallCount;
+        
+        foreach(y; 0 .. grid.size.y)
+            loop_body(vec2i(x, y), maxWallsY, wallCount);
+        
+        yield;
     }
 }
 
