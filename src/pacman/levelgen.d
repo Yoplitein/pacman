@@ -136,8 +136,10 @@ private void simulate()
 //shorten really long walls
 private void shorten()
 {
-    immutable maxWallsX = grid.size.x / 4;
-    immutable maxWallsY = grid.size.y / 4;
+    enum percentage = 45 / 100f;
+    enum minWalls = 2;
+    immutable maxWallsXUpper = cast(uint)(grid.size.x * percentage);
+    immutable maxWallsYUpper = cast(uint)(grid.size.y * percentage);
     
     static void loop_body(immutable vec2i position, immutable uint maxWalls, ref uint wallCount)
     {
@@ -160,9 +162,15 @@ private void shorten()
     foreach(y; 0 .. grid.size.y)
     {
         uint wallCount;
+        uint maxWalls;
         
         foreach(x; 0 .. grid.size.x)
-            loop_body(vec2i(x, y), maxWallsX, wallCount);
+        {
+            if(wallCount == 0)
+                maxWalls = uniform!"[]"(minWalls, maxWallsXUpper);
+            
+            loop_body(vec2i(x, y), maxWalls, wallCount);
+        }
         
         yield;
     }
@@ -171,9 +179,15 @@ private void shorten()
     foreach(x; 0 .. grid.size.x)
     {
         uint wallCount;
+        uint maxWalls;
         
         foreach(y; 0 .. grid.size.y)
-            loop_body(vec2i(x, y), maxWallsY, wallCount);
+        {
+            if(wallCount == 0)
+                maxWalls = uniform!"[]"(minWalls, maxWallsYUpper);
+            
+            loop_body(vec2i(x, y), maxWalls, wallCount);
+        }
         
         yield;
     }
