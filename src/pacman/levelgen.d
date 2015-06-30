@@ -215,16 +215,43 @@ private void punch()
                 continue;
             
             immutable nearestWallOffset = position.find_adjacent(TileType.TASTY_FLOOR);
-            immutable idealOffset = -1 * nearestWallOffset;
             
+            //no neighbors, try to punch our way through to some other floors
             if(nearestWallOffset == vec2i(0, 0))
             {
+                uint punchCount;
+                
                 warningf("Floor at %s has no neighbors!", position);
+                
+                foreach(offset; neumannOffsets)
+                {
+                    if(punchCount == 2)
+                        break;
+                    
+                    immutable potentialFloorPosition = position + 2 * offset;
+                    
+                    if(!grid.exists(potentialFloorPosition) || potentialFloorPosition.on_edge)
+                        continue;
+                    
+                    if(grid[potentialFloorPosition].type != TileType.TASTY_FLOOR)
+                        continue;
+                    
+                    grid[position + offset].type = TileType.TASTY_FLOOR;
+                    punchCount++;
+                }
+                
+                if(punchCount == 0)
+                {
+                    warningf("Changed to a wall");
+                    
+                    grid[position].type = TileType.WALL;
+                }
                 
                 continue;
             }
             
             //first try to continue the line of floors
+            immutable idealOffset = -1 * nearestWallOffset;
             immutable idealPosition = position + idealOffset;
             
             if(grid.exists(idealPosition) && !idealPosition.on_edge)
@@ -248,7 +275,7 @@ private void punch()
                 if(!grid.exists(newPosition) || newPosition.on_edge)
                     continue;
                 
-                if(newPosition.count_adjacent(TileType.TASTY_FLOOR, false) >= 3)
+                if(newPosition.count_adjacent(TileType.TASTY_FLOOR, false) >= 2)
                 {
                     grid[newPosition].type = TileType.TASTY_FLOOR;
                     success = true;
