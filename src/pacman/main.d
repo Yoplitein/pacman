@@ -49,11 +49,14 @@ void main()
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
     
-    generate_level;
-    //grid.load("res/map.json");
-    player.set_position(grid.playerSpawn);
-    //ghost.set_position(grid.ghostSpawns[0]);
+    void regenerate_level()
+    {
+        generate_level;
+        player.set_position(grid.playerSpawn);
+        ghost.set_position(grid.ghostSpawns[0]);
+    }
     
+    regenerate_level;
     renderer.program.uniform("model").set(
         mat4.translation(vec3f(15, 15, 0)) *
         mat4.scaling(vec3f(200, 200, 1))
@@ -81,18 +84,14 @@ void main()
         }
         
         if(sdl.keyboard.testAndRelease(SDLK_g))
-        {
-            generate_level;
-            
-            player.set_position(grid.playerSpawn);
-        }
+            regenerate_level;
         
         glClear(GL_COLOR_BUFFER_BIT);
         //draw_background;
         renderer.update;
         grid.render;
-        //ghost.update;
-        //ghost.render;
+        ghost.update;
+        ghost.render;
         player.update;
         player.render;
         //renderer.draw;

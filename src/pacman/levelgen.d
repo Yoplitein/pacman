@@ -62,6 +62,8 @@ void generate_level()
     shorten;
     info("Punching");
     punch;
+    info("Placing spawns");
+    place_spawns;
     grid.bake;
     info("Level generated");
 }
@@ -274,6 +276,51 @@ private void punch()
                 warning("Dead end!");
         }
     }
+}
+
+private void place_spawns()
+{
+    vec2i playerSpawn = nearest_floor(vec2i(grid.size.x / 2, grid.size.y / 2));
+    vec2i ghostSpawn1 = nearest_floor(vec2i(0, 0));
+    vec2i ghostSpawn2 = nearest_floor(vec2i(0, grid.size.y));
+    vec2i ghostSpawn3 = nearest_floor(vec2i(grid.size.x, 0));
+    vec2i ghostSpawn4 = nearest_floor(vec2i(grid.size.x, grid.size.y));
+    
+    grid[playerSpawn].type = TileType.PLAYER_SPAWN;
+    grid[ghostSpawn1].type = TileType.GHOST_SPAWN;
+    grid[ghostSpawn2].type = TileType.GHOST_SPAWN;
+    grid[ghostSpawn3].type = TileType.GHOST_SPAWN;
+    grid[ghostSpawn4].type = TileType.GHOST_SPAWN;
+}
+
+private vec2i nearest_floor(vec2i position)
+{
+    static bool valid(vec2i position)
+    {
+        return
+            grid.exists(position) &&
+            !position.on_edge &&
+            grid[position].type == TileType.TASTY_FLOOR
+        ;
+    }
+    
+    if(valid(position))
+        return position;
+    
+    foreach(max; 1 .. 10)
+    {
+        foreach(dx; -max .. max)
+            foreach(dy; -max .. max)
+            {
+                immutable newPosition = position + vec2i(dx, dy);
+                
+                if(valid(newPosition))
+                    return newPosition;
+            }
+    }
+    
+    fatal("Couldn't find a floor close to ", position);
+    assert(false);
 }
 
 private bool needs_update(vec2i position, ref Update update)
