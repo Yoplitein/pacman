@@ -97,11 +97,11 @@ private void shape()
 //simulate the level as an automata, to smooth it out
 private void simulate()
 {
-    size_t simulations = uniform(5, 25);
+    immutable simulations = uniform!"[]"(50, 100);
     
     foreach(generation; 0 .. simulations)
     {
-        Update[] updates;
+        bool updated;
         
         info("Generation ", generation);
         
@@ -119,18 +119,20 @@ private void simulate()
                 
                 if(position.needs_update(update))
                 {
-                    grid[position].type = update.newType;
+                    grid[update.position].type = update.newType;
+                    updated = true;
                 }
             }
         
-        /*foreach(index, update; updates)
+        if(updated)
         {
-            grid[update.position].type = update.newType;
+            info("Simulation ended early");
             
-            if(index % 10 == 0)
-                yield;
-        }*/
+            return;
+        }
     }
+    
+    info("Simulation ended normally");
 }
 
 //shorten really long walls
