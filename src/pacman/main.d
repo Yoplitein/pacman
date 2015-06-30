@@ -48,9 +48,8 @@ void main()
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
-    auto generationFiber = new Fiber(&generate_level);
     
-    generationFiber.call;
+    generate_level;
     //grid.load("res/map.json");
     player.set_position(grid.playerSpawn);
     //ghost.set_position(grid.ghostSpawns[0]);
@@ -81,17 +80,11 @@ void main()
             lastTitleUpdate = timeSeconds;
         }
         
-        if(generationFiber.state != Fiber.State.TERM)
-            generationFiber.call;
-        else
+        if(sdl.keyboard.testAndRelease(SDLK_g))
         {
-            if(sdl.keyboard.isPressed(SDLK_g))
-            {
-                generationFiber.reset;
-                generationFiber.call;
-                
-                player.set_position(grid.playerSpawn);
-            }
+            generate_level;
+            
+            player.set_position(grid.playerSpawn);
         }
         
         glClear(GL_COLOR_BUFFER_BIT);

@@ -44,13 +44,10 @@ private struct Update
 void generate_level()
 {
     static immutable sizeChoices = iota(11 * 1, 11 * 2, 2);
-    /*immutable size = vec2i(
-        //sizeChoices[uniform(0, $)],
-        //sizeChoices[uniform(0, $)],
-        uniform!"[]"(11, 32),
-        uniform!"[]"(11, 18),
-    );*/
-    immutable size = vec2i(39, 18);
+    immutable size = vec2i(
+        sizeChoices[uniform(0, $)],
+        sizeChoices[uniform(0, $)],
+    );
     
     info("Generating new level of size ", size);
     grid.reset(size);
@@ -88,9 +85,6 @@ private void shape()
                 grid[position].type = TileType.WALL;
             else
                 grid[position].type = TileType.TASTY_FLOOR;
-            
-            if(x % 5 == 0)
-                yield;
         }
 }
 
@@ -110,9 +104,6 @@ private void simulate()
             {
                 immutable position = vec2i(x, y);
                 Update update = Update(position);
-                
-                if(x == 0)
-                    yield;
                 
                 if(position.on_edge)
                     continue;
@@ -173,8 +164,6 @@ private void shorten()
             
             loop_body(vec2i(x, y), maxWalls, wallCount);
         }
-        
-        yield;
     }
     
     //shorten walls on the y axis
@@ -190,15 +179,12 @@ private void shorten()
             
             loop_body(vec2i(x, y), maxWalls, wallCount);
         }
-        
-        yield;
     }
 }
 
-//punch out walls that make dead ends
+//punch out walls that make dead ends/make floors entirely inaccessible
 private void punch()
 {
-    
     foreach(y; 0 .. grid.size.y)
     {
         foreach(x; 0 .. grid.size.x)
@@ -287,21 +273,21 @@ private void punch()
             if(!success)
                 warning("Dead end!");
         }
-        
-        yield;
     }
 }
 
 private bool needs_update(vec2i position, ref Update update)
 {
-    immutable type = grid[position].type;
-    //with moore neighborhoods
+    //rules for the smoothing automata
     immutable rules = [
+        //current tile's type
         TileType.TASTY_FLOOR: [
+            //only look for this type when counting adjacent tiles (using Moore neighborhoods)
             TileType.TASTY_FLOOR: [
-                0: TileType.WALL,
+                //the new type to morph into if there are this many adjacent tiles
+                0: TileType.WALL, //a floor with 0-1 or 5-8 adjacent floors will morph into a wall
                 1: TileType.WALL,
-                2: TileType.TASTY_FLOOR,
+                2: TileType.TASTY_FLOOR, //a floor with 2-4 adjacent floors will remain a floor
                 3: TileType.TASTY_FLOOR,
                 4: TileType.TASTY_FLOOR,
                 5: TileType.WALL,
@@ -310,7 +296,7 @@ private bool needs_update(vec2i position, ref Update update)
                 8: TileType.WALL,
             ],
             TileType.WALL: [
-                3: TileType.WALL,
+                3: TileType.WALL, //a floor with exactly 3 adjacent walls will morph into a wall
             ],
         ],
         TileType.WALL: [
@@ -330,50 +316,29 @@ private bool needs_update(vec2i position, ref Update update)
             ],
         ],
     ];
-    //with neumann neighborhoods
-    /*immutable rules = [
-        TileType.TASTY_FLOOR: [
-            0: TileType.WALL,
-            1: TileType.WALL,
-            2: TileType.TASTY_FLOOR,
-            3: TileType.TASTY_FLOOR,
-            4: TileType.TASTY_FLOOR,
-        ],
-        TileType.WALL: [
-            0: TileType.WALL,
-            1: TileType.WALL,
-            2: TileType.WALL,
-            3: TileType.TASTY_FLOOR,
-            4: TileType.TASTY_FLOOR,
-        ],
-    ];*/
+    immutable currentType = grid[position].type;
     
-    /*
-        Any wall cell with fewer than two wall neighbours becomes floor
-        Any wall cell with two or three wall neighbours lives
-        Any wall cell with more than three wall neighbours becomes floor
-        Any floor cell with exactly three wall neighbours becomes a wall cell
-    */
-    
-    switch(type)
+    switch(currentType)
     {
         case TileType.WALL:
         case TileType.TASTY_FLOOR:
-            size_t adjacent = position.count_adjacent(type);
-            TileType newType = rules[type][type].get(cast(int)adjacent, type);
+            //check rules for the current type
+            uint adjacent = position.count_adjacent(currentType);
+            TileType newType = rules[currentType][currentType].get(cast(int)adjacent, currentType);
             
-            if(newType != type)
+            if(newType != currentType)
             {
                 update.newType = newType;
                 
                 return true;
             }
             
-            TileType inverseType = type.inverse;
+            //if the above failed, then check the rules for the inverse type
+            TileType inverseType = currentType.inverse;
             adjacent = position.count_adjacent(inverseType);
-            newType = rules[type][inverseType].get(cast(int)adjacent, type);
+            newType = rules[currentType][inverseType].get(cast(int)adjacent, currentType);
             
-            if(newType != type)
+            if(newType != currentType)
             {
                 update.newType = newType;
                 
@@ -387,33 +352,9 @@ private bool needs_update(vec2i position, ref Update update)
     return false;
 }
 
-/*private bool can_find_adjacent(vec2i position, TileType targetType, Direction ignoredDirection)
+private uint count_adjacent(vec2i position, TileType targetType, bool mooreNeighborhood = true)
 {
-    foreach(direction, offset; directionOffsets)
-    {
-        if(direction == Direction.NONE)
-            continue;
-        
-        if(direction == ignoredDirection)
-            continue;
-        
-        immutable newPosition = position + offset;
-        
-        if(!grid.exists(newPosition))
-            continue;
-        
-        immutable adjacentType = grid[newPosition].type;
-        
-        if(adjacentType == targetType)
-            return true;
-    }
-    
-    return false;
-}*/
-
-private size_t count_adjacent(vec2i position, TileType targetType, bool mooreNeighborhood = true)
-{
-    size_t count;
+    uint count;
     
     foreach(offset; mooreNeighborhood ? mooreOffsets : neumannOffsets)
     {
@@ -467,15 +408,6 @@ private TileType inverse(TileType type)
             return TileType.WALL;
         default:
             assert(false);
-    }
-}
-
-private void yield()
-{
-    if(Fiber.getThis !is null)
-    {
-        grid.bake;
-        Fiber.yield;
     }
 }
 
