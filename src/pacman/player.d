@@ -42,6 +42,7 @@ final class Player: Creature
         
         color = vec3i(255, 255, 255);
         rotation = 0;
+        activeTexture = animationFrames[0];
     }
     
     override void update()
@@ -50,25 +51,21 @@ final class Player: Creature
         
         if(dead)
         {
+            enum spinupMul = 50;
+            enum maxSpin = spinupMul / 2;
             real deadPercent = cast(real)deadTime / DEATH_TIME;
-            real colorOffset = fmin(deadPercent * 4, 1);
-            color = vec3f(1 - colorOffset, 1, 1 - colorOffset);
-            rotation += deadPercent * 75;
+            rotation += fmin(deadPercent * spinupMul, deadPercent * maxSpin);
+            
+            foreach(_; 0 .. 3)
+                next_texture;
             
             return;
         }
         
         if(moving && timeSeconds - lastAnimationTime > ANIMATION_DELAY)
         {
-            if(incrementTexture)
-                textureIndex++;
-            else
-                textureIndex--;
+            next_texture;
             
-            if(textureIndex == 0 || textureIndex == NUM_TEXTURES - 1)
-                incrementTexture = !incrementTexture;
-            
-            activeTexture = animationFrames[textureIndex];
             lastAnimationTime = timeSeconds;
         }
     }
@@ -139,5 +136,18 @@ final class Player: Creature
             &rotOrigin,
             SDL_FLIP_NONE*/
         );
+    }
+    
+    void next_texture()
+    {
+        if(incrementTexture)
+            textureIndex++;
+        else
+            textureIndex--;
+        
+        if(textureIndex == 0 || textureIndex == NUM_TEXTURES - 1)
+            incrementTexture = !incrementTexture;
+        
+        activeTexture = animationFrames[textureIndex];
     }
 }
