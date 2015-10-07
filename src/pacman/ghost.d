@@ -230,7 +230,7 @@ final class Ghost: Creature
             eyesBackgroundTexture = get_texture("res/ghost_eyes_background.png");
         }
         
-        speed = TILE_SIZE * 7.5;
+        speed = TILE_SIZE * 2.5;
         ignoreWalls = false;
         this.color = color;
         ai = new PathingAI(this);
