@@ -17,14 +17,16 @@ final class Player: Creature
 {
     enum NUM_TEXTURES = 16;
     enum ANIMATION_DELAY = 0.015;
+    enum DEATH_TIME = 100;
     
     TextureData[NUM_TEXTURES] animationFrames;
     TextureData activeTexture;
     
-    uint textureIndex;
     bool incrementTexture = true;
     real lastAnimationTime = 0;
     real rotation = 0; //in degrees
+    uint textureIndex;
+    vec3f color = vec3i(255, 255, 255);
     
     this()
     {
@@ -34,9 +36,27 @@ final class Player: Creature
         activeTexture = animationFrames[0];
     }
     
+    override void reset()
+    {
+        super.reset();
+        
+        color = vec3i(255, 255, 255);
+        rotation = 0;
+    }
+    
     override void update()
     {
         super.update;
+        
+        if(dead)
+        {
+            real deadPercent = cast(real)deadTime / DEATH_TIME;
+            real colorOffset = fmin(deadPercent * 4, 1);
+            color = vec3f(1 - colorOffset, 1, 1 - colorOffset);
+            rotation += deadPercent * 75;
+            
+            return;
+        }
         
         if(moving && timeSeconds - lastAnimationTime > ANIMATION_DELAY)
         {
@@ -111,7 +131,8 @@ final class Player: Creature
             activeTexture,
             cast(int)screenPosition.x,
             cast(int)screenPosition.y,
-            rotation
+            rotation,
+            color,
             /*src,
             dst,
             rotation,

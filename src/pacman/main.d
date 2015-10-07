@@ -1,3 +1,5 @@
+module pacman.main;
+
 import core.thread;
 import std.experimental.logger;
 import std.file;
@@ -22,10 +24,10 @@ SDL2Texture backgroundTexture;
 
 void main()
 {
-    stdlog = new ConsoleLogger;
-    sdl = new SDL2(stdlog); scope(exit) sdl.close;
+    sharedLog = new ConsoleLogger;
+    sdl = new SDL2(sharedLog); scope(exit) sdl.close;
     sdlImage = new SDLImage(sdl, IMG_INIT_PNG); scope(exit) sdlImage.close;
-    opengl = new OpenGL(stdlog); scope(exit) opengl.close;
+    opengl = new OpenGL(sharedLog); scope(exit) opengl.close;
     window = new SDL2Window(
         sdl,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -44,7 +46,7 @@ void main()
     renderer = new Renderer; scope(exit) renderer.close;
     grid = new Grid;
     player = new Player;
-    ghost = new Ghost(vec3i(255, 0, 255));
+    ghost = new Ghost(vec3f(1, 0, 1));
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
@@ -52,7 +54,9 @@ void main()
     void regenerate_level()
     {
         generate_level;
+        player.reset;
         player.set_position(grid.playerSpawn);
+        ghost.reset;
         ghost.set_position(grid.ghostSpawns[0]);
     }
     
@@ -85,6 +89,12 @@ void main()
         
         if(sdl.keyboard.testAndRelease(SDLK_g))
             regenerate_level;
+        
+        if(player.dead)
+        {
+            if(player.deadTime >= Player.DEATH_TIME)
+                regenerate_level;
+        }
         
         glClear(GL_COLOR_BUFFER_BIT);
         //draw_background;

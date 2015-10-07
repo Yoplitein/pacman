@@ -17,6 +17,8 @@ class Creature
     bool ignoreWalls = false; //whether to ignore walls when moving
     bool startMoving = false; //whether to begin movement
     bool moving = false; //whether movement is currently happening
+    bool dead = false;
+    uint deadTime; //how many ticks this creature has been dead
     
     void set_position(vec2i gridPosition)
     {
@@ -25,6 +27,12 @@ class Creature
             gridPosition.x * TILE_SIZE,
             gridPosition.y * TILE_SIZE
         );
+    }
+    
+    void reset()
+    {
+        dead = false;
+        deadTime = 0;
     }
     
     void update_position()
@@ -98,6 +106,13 @@ class Creature
     
     void update()
     {
+        if(dead)
+        {
+            deadTime += 1;
+            
+            return;
+        }
+        
         update_velocity;
         update_position;
     }

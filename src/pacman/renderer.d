@@ -130,7 +130,7 @@ class Renderer
         program.uniform("view").set(view);
     }
     
-    void copy(TextureData data, int x, int y, real rotation = 0, vec3i color = vec3i(255, 255, 255))
+    void copy(TextureData data, int x, int y, real rotation = 0, vec3f color = vec3f(1, 1, 1))
     {
         data.texture.use;
         program.uniform("model").set(
@@ -140,13 +140,7 @@ class Renderer
             mat4.translation(vec3f(-data.width / 2f, -data.height / 2f, 0)) *
             mat4.scaling(vec3f(data.width, data.height, 0))
         );
-        program.uniform("colorMask").set(
-            vec3f(
-                color.r / 255,
-                color.g / 255,
-                color.b / 255,
-            )
-        );
+        program.uniform("colorMask").set(color);
         glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
     }
     

@@ -104,11 +104,6 @@ class SimplePathingAI: BaseAI
         
         return result;
     }
-    
-    static real distance(vec2i a, vec2i b)
-    {
-        return sqrt(cast(real)(a.x - b.x) ^^ 2 + cast(real)(a.y - b.y) ^^ 2);
-    }
 }
 
 class PathingAI: BaseAI
@@ -222,11 +217,11 @@ final class Ghost: Creature
     static TextureData bodyTexture;
     static TextureData eyesTexture;
     static TextureData eyesBackgroundTexture;
-    vec3i color;
+    vec3f color;
     vec2i eyesOffset;
     BaseAI ai;
     
-    this(vec3i color)
+    this(vec3f color)
     {
         if(bodyTexture.texture is null)
         {
@@ -235,7 +230,7 @@ final class Ghost: Creature
             eyesBackgroundTexture = get_texture("res/ghost_eyes_background.png");
         }
         
-        speed = TILE_SIZE * 2.5;
+        speed = TILE_SIZE * 7.5;
         ignoreWalls = false;
         this.color = color;
         ai = new PathingAI(this);
@@ -244,6 +239,11 @@ final class Ghost: Creature
     override void update()
     {
         super.update;
+        
+        enum KILL_DISTANCE = 0.75;
+        
+        if(distance(player.screenPosition, screenPosition) <= KILL_DISTANCE)
+            player.dead = true;
         
         if(!moving && !startMoving)
         {
@@ -268,4 +268,9 @@ final class Ghost: Creature
         renderer.copy(bodyTexture, x, y, 0, color);
         renderer.copy(eyesTexture, x + eyesOffset.x, y + eyesOffset.y);
     }
+}
+
+private real distance(VectorType)(VectorType a, VectorType b)
+{
+    return sqrt(cast(real)(a.x - b.x) ^^ 2 + cast(real)(a.y - b.y) ^^ 2);
 }
