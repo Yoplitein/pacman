@@ -260,6 +260,8 @@ final class Ghost: Creature
     enum KILL_DISTANCE = 0.75;
     enum SPEED_NORMAL = TILE_SIZE * 2.5;
     enum SPEED_SCARED = TILE_SIZE * 2.0;
+    enum AI_WANDER = 0;
+    enum AI_CHASE = 1;
     static TextureData bodyTexture;
     static TextureData bodyTextureScared;
     static TextureData eyesTexture;
@@ -272,7 +274,7 @@ final class Ghost: Creature
     BaseAI ai;
     BaseAI lastAI;
     
-    this(vec3f color)
+    this(vec3f color, int aiType)
     {
         if(bodyTexture.texture is null)
         {
@@ -286,7 +288,13 @@ final class Ghost: Creature
         ignoreWalls = false;
         movesWhenDead = true;
         this.color = color;
-        ai = new PathingAI(this);
+        
+        if(aiType == AI_WANDER)
+            ai = new WanderAI(this);
+        else if(aiType == AI_CHASE)
+            ai = new PathingAI(this);
+        else
+            throw new Exception("Unknown Ghost AI type");
     }
     
     override void reset()

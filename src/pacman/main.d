@@ -52,7 +52,12 @@ void main()
     scope(exit) renderer.close;
     grid = new Grid;
     player = new Player;
-    ghost = new Ghost(vec3f(1, 0, 1));
+    ghosts = [
+        new Ghost(vec3f(1.00, 0.00, 0.00), Ghost.AI_WANDER),
+        new Ghost(vec3f(0.00, 1.00, 0.87), Ghost.AI_CHASE),
+        new Ghost(vec3f(1.00, 0.72, 0.87), Ghost.AI_CHASE),
+        new Ghost(vec3f(1.00, 0.72, 0.27), Ghost.AI_WANDER),
+    ];
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
@@ -63,8 +68,12 @@ void main()
         generate_level;
         player.reset;
         player.set_position(grid.playerSpawn);
-        ghost.reset;
-        ghost.set_position(grid.ghostSpawns[0]);
+        
+        foreach(index, ghost; ghosts)
+        {
+            ghost.reset;
+            ghost.set_position(grid.ghostSpawns[index]);
+        }
     }
     
     regenerate_level;
@@ -110,7 +119,8 @@ void main()
         {
             if(!empoweredStateSeen) //player is freshly empowered
             {
-                ghost.set_scared();
+                foreach(ghost; ghosts)
+                    ghost.set_scared();
                 
                 empoweredStateSeen = true;
             }
@@ -119,7 +129,8 @@ void main()
         {
             if(empoweredStateSeen) //player is no longer empowered
             {
-                ghost.set_not_scared;
+                foreach(ghost; ghosts)
+                    ghost.set_not_scared;
                 
                 empoweredStateSeen = false;
             }
@@ -129,8 +140,13 @@ void main()
         //draw_background;
         renderer.update;
         grid.render;
-        ghost.update;
-        ghost.render;
+        
+        foreach(ghost; ghosts)
+        {
+            ghost.update;
+            ghost.render;
+        }
+        
         player.update;
         player.render;
         //renderer.draw;

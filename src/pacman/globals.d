@@ -21,6 +21,6 @@ OpenGL opengl;
 Renderer renderer;
 Grid grid;
 Player player;
-Ghost ghost;
+Ghost[] ghosts;
 real timeSeconds;
 real timeDelta;
