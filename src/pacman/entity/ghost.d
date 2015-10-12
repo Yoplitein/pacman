@@ -1,4 +1,4 @@
-module pacman.ghost;
+module pacman.entity.ghost;
 
 import std.experimental.logger;
 import std.random;
@@ -8,10 +8,10 @@ import std.math;
 import gfm.sdl2;
 
 import pacman;
-import pacman.creature;
-import pacman.texture;
+import pacman.entity.creature;
+import pacman.gl.texture;
 import pacman.globals;
-import pacman.grid;
+import pacman.entity.grid;
 
 mixin template AIConstructor()
 {

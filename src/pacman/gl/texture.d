@@ -1,4 +1,4 @@
-module pacman.texture;
+module pacman.gl.texture;
 
 import std.experimental.logger;
 import std.file;

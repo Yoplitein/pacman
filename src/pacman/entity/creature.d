@@ -1,4 +1,4 @@
-module pacman.creature;
+module pacman.entity.creature;
 
 import std.math;
 

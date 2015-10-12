@@ -1,4 +1,4 @@
-module pacman.renderer;
+module pacman.gl.renderer;
 
 import std.experimental.logger;
 import std.file;
@@ -9,7 +9,7 @@ import gfm.math: radians;
 
 import pacman;
 import pacman.globals;
-import pacman.texture;
+import pacman.gl.texture;
 
 struct Vertex
 {

@@ -7,7 +7,7 @@ import std.random;
 import std.range;
 
 import pacman.globals;
-import pacman.grid;
+import pacman.entity.grid;
 import pacman;
 
 //offsets for Neumann neighborhoods

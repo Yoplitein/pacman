@@ -1,4 +1,4 @@
-module pacman.grid;
+module pacman.entity.grid;
 
 import std.algorithm;
 import std.array;
@@ -11,7 +11,7 @@ import std.json;
 import gfm.sdl2;
 
 import pacman;
-import pacman.texture;
+import pacman.gl.texture;
 import pacman.globals;
 
 immutable vec2i[Direction] directionOffsets;

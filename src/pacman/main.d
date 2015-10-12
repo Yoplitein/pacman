@@ -12,12 +12,12 @@ import gfm.sdl2;
 import gfm.opengl;
 
 import pacman;
-import pacman.ghost;
+import pacman.entity.ghost;
 import pacman.globals;
-import pacman.grid;
-import pacman.player;
-import pacman.texture;
-import pacman.renderer;
+import pacman.entity.grid;
+import pacman.entity.player;
+import pacman.gl.texture;
+import pacman.gl.renderer;
 import pacman.levelgen;
 
 SDL2Texture backgroundTexture;

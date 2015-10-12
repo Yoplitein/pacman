@@ -1,4 +1,4 @@
-module pacman.player;
+module pacman.entity.player;
 
 import std.experimental.logger;
 import std.math;
@@ -8,10 +8,10 @@ import gfm.sdl2;
 import gfm.math: degrees;
 
 import pacman;
-import pacman.creature;
-import pacman.texture;
+import pacman.entity.creature;
+import pacman.gl.texture;
 import pacman.globals;
-import pacman.grid;
+import pacman.entity.grid;
 
 final class Player: Creature
 {
