@@ -19,6 +19,7 @@ class Creature
     bool moving = false; //whether movement is currently happening
     bool dead = false;
     uint deadTime; //how many ticks this creature has been dead
+    bool movesWhenDead = false; //whether movement still happens when dead (mostly for ghosts)
     
     void set_position(vec2i gridPosition)
     {
@@ -112,7 +113,8 @@ class Creature
         {
             deadTime += 1;
             
-            return;
+            if(!movesWhenDead)
+                return;
         }
         
         update_velocity;

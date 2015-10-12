@@ -129,15 +129,20 @@ class PathingAI: BaseAI
     
     override Direction next_direction()
     {
-        if(goal != player.gridPosition)
+        if(goal != ghost.get_goal)
         {
-            goal = player.gridPosition;
+            goal = ghost.get_goal;
             
             find_path;
         }
         
         if(path.length == 0)
-            return Direction.NONE;
+        {
+            if(ghost.gridPosition == goal)
+                return Direction.NONE;
+            else
+                find_path;
+        }
         
         Direction result = path[0];
         path = path[1 .. $];
@@ -263,7 +268,7 @@ final class Ghost: Creature
     vec2i eyesOffset;
     vec2i spawnpoint;
     bool scared;
-    bool firstUpdate;
+    bool firstUpdate = true;
     BaseAI ai;
     BaseAI lastAI;
     
@@ -279,6 +284,7 @@ final class Ghost: Creature
         
         speed = TILE_SIZE * 2.5;
         ignoreWalls = false;
+        movesWhenDead = true;
         this.color = color;
         ai = new PathingAI(this);
     }
@@ -287,7 +293,7 @@ final class Ghost: Creature
     {
         super.reset;
         
-        firstUpdate = false;
+        firstUpdate = true;
         speed = SPEED_NORMAL;
         
         if(lastAI !is null)
@@ -305,6 +311,8 @@ final class Ghost: Creature
         {
             firstUpdate = false;
             spawnpoint = gridPosition;
+            
+            info("Ghost spawnpoint at ", spawnpoint);
         }
         
         if(!moving && !startMoving)
@@ -315,12 +323,20 @@ final class Ghost: Creature
         }
         
         if(dead)
+        {
+            if(gridPosition == spawnpoint)
+                set_alive;
+            
             return;
+        }
         
         if(distance(player.screenPosition, screenPosition) <= KILL_DISTANCE)
         {
             if(scared)
-                dead = true; //TODO: go back to spawnpoint to revive
+            {
+                set_not_scared;
+                set_dead;
+            }
             else
                 player.dead = true;
         }
@@ -367,6 +383,38 @@ final class Ghost: Creature
         speed = SPEED_NORMAL;
         ai = lastAI;
         lastAI = null;
+    }
+    
+    void set_dead()
+    {
+        if(dead)
+            return;
+        
+        info("Ghost died");
+        
+        dead = true;
+        lastAI = ai;
+        ai = new PathingAI(this);
+    }
+    
+    void set_alive()
+    {
+        if(!dead)
+            return;
+        
+        info("Ghost revived");
+        
+        dead = false;
+        ai = lastAI;
+        lastAI = null;
+    }
+    
+    vec2i get_goal()
+    {
+        if(dead)
+            return spawnpoint;
+        else
+            return player.gridPosition;
     }
 }
 
