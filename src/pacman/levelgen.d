@@ -64,6 +64,8 @@ void generate_level()
     punch;
     info("Placing spawns");
     place_spawns;
+    info("Enhancing taste of some floors");
+    place_very_tasty_floors;
     grid.bake;
     info("Level generated");
 }
@@ -291,6 +293,21 @@ private void place_spawns()
     grid[ghostSpawn2].type = TileType.GHOST_SPAWN;
     grid[ghostSpawn3].type = TileType.GHOST_SPAWN;
     grid[ghostSpawn4].type = TileType.GHOST_SPAWN;
+}
+
+private void place_very_tasty_floors()
+{
+    int halfX = grid.size.x / 2;
+    int halfY = grid.size.y / 2;
+    vec2i pos1 = nearest_floor(vec2i(halfX, 0));
+    vec2i pos2 = nearest_floor(vec2i(0, halfY));
+    vec2i pos3 = nearest_floor(vec2i(grid.size.x, halfY));
+    vec2i pos4 = nearest_floor(vec2i(halfX, grid.size.y));
+    
+    grid[pos1].type = TileType.VERY_TASTY_FLOOR;
+    grid[pos2].type = TileType.VERY_TASTY_FLOOR;
+    grid[pos3].type = TileType.VERY_TASTY_FLOOR;
+    grid[pos4].type = TileType.VERY_TASTY_FLOOR;
 }
 
 private vec2i nearest_floor(vec2i position)

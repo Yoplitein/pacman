@@ -31,6 +31,8 @@ class Creature
     
     void reset()
     {
+        startMoving = false;
+        moving = false;
         dead = false;
         deadTime = 0;
     }

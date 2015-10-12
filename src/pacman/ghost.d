@@ -212,20 +212,67 @@ class PathingAI: BaseAI
     }
 }
 
+class RunAwayAI: BaseAI
+{
+    mixin AIConstructor;
+    
+    override Direction next_direction()
+    {
+        immutable start = ghost.gridPosition;
+        immutable goal = player.gridPosition;
+        immutable currentDistance = distance(start, goal);
+        Direction result;
+        
+        if(currentDistance < 1)
+            return Direction.NONE;
+        
+        foreach(direction, offset; directionOffsets)
+        {
+            immutable next = start + offset;
+            
+            if(!grid.exists(next) || grid.solid(next))
+                continue;
+            
+            immutable nextDistance = distance(next, goal);
+            
+            if(nextDistance > currentDistance)
+            {
+                result = direction;
+                
+                break;
+            }
+        }
+        
+        if(result == Direction.init)
+            info("scared ghost has nowhere to go! :(");
+        
+        return result;
+    }
+}
+
 final class Ghost: Creature
 {
+    enum KILL_DISTANCE = 0.75;
+    enum SPEED_NORMAL = TILE_SIZE * 2.5;
+    enum SPEED_SCARED = TILE_SIZE * 2.0;
     static TextureData bodyTexture;
+    static TextureData bodyTextureScared;
     static TextureData eyesTexture;
     static TextureData eyesBackgroundTexture;
     vec3f color;
     vec2i eyesOffset;
+    vec2i spawnpoint;
+    bool scared;
+    bool firstUpdate;
     BaseAI ai;
+    BaseAI lastAI;
     
     this(vec3f color)
     {
         if(bodyTexture.texture is null)
         {
             bodyTexture = get_texture("res/ghost_body.png");
+            bodyTextureScared = get_texture("res/ghost_body_scared.png");
             eyesTexture = get_texture("res/ghost_eyes.png");
             eyesBackgroundTexture = get_texture("res/ghost_eyes_background.png");
         }
@@ -236,14 +283,29 @@ final class Ghost: Creature
         ai = new PathingAI(this);
     }
     
+    override void reset()
+    {
+        super.reset;
+        
+        firstUpdate = false;
+        speed = SPEED_NORMAL;
+        
+        if(lastAI !is null)
+        {
+            ai = lastAI;
+            lastAI = null;
+        }
+    }
+    
     override void update()
     {
         super.update;
         
-        enum KILL_DISTANCE = 0.75;
-        
-        if(distance(player.screenPosition, screenPosition) <= KILL_DISTANCE)
-            player.dead = true;
+        if(firstUpdate)
+        {
+            firstUpdate = false;
+            spawnpoint = gridPosition;
+        }
         
         if(!moving && !startMoving)
         {
@@ -251,22 +313,60 @@ final class Ghost: Creature
             eyesOffset = cast(vec2i)(wantedVelocity * vec2(2, 3));
             startMoving = true;
         }
+        
+        if(dead)
+            return;
+        
+        if(distance(player.screenPosition, screenPosition) <= KILL_DISTANCE)
+        {
+            if(scared)
+                dead = true; //TODO: go back to spawnpoint to revive
+            else
+                player.dead = true;
+        }
     }
     
     override void render()
     {
         immutable x = cast(int)screenPosition.x;
         immutable y = cast(int)screenPosition.y;
+        vec3f finalColor = color;
         
-        //TODO: color mask
-        /*bodyTexture.setColorMod(
-            cast(ubyte)color.r,
-            cast(ubyte)color.g,
-            cast(ubyte)color.b,
-        );*/
+        if(scared)
+        {
+            int timeRemaining = player.EMPOWERED_TIME - player.empoweredTime;
+            
+            if(timeRemaining < 100 && timeRemaining % 20 <= 10)
+                finalColor = vec3f(0.82, 0.82, 0.82);
+            else
+                finalColor = vec3f(0.08, 0.08, 1.00);
+        }
+        
         renderer.copy(eyesBackgroundTexture, x, y);
-        renderer.copy(bodyTexture, x, y, 0, color);
+        if(!dead) renderer.copy(scared ? bodyTextureScared : bodyTexture, x, y, 0, finalColor);
         renderer.copy(eyesTexture, x + eyesOffset.x, y + eyesOffset.y);
+    }
+    
+    void set_scared()
+    {
+        if(scared)
+            return;
+        
+        scared = true;
+        speed = SPEED_SCARED;
+        lastAI = ai;
+        ai = new RunAwayAI(this);
+    }
+    
+    void set_not_scared()
+    {
+        if(!scared)
+            return;
+        
+        scared = false;
+        speed = SPEED_NORMAL;
+        ai = lastAI;
+        lastAI = null;
     }
 }
 

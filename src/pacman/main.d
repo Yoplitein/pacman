@@ -50,6 +50,7 @@ void main()
     uint frames;
     real lastFrameTime = 0;
     real lastTitleUpdate = 0;
+    bool empoweredStateSeen;
     
     void regenerate_level()
     {
@@ -90,10 +91,32 @@ void main()
         if(sdl.keyboard.testAndRelease(SDLK_g))
             regenerate_level;
         
+        if(sdl.keyboard.testAndRelease(SDLK_e))
+            player.empowered = true;
+        
         if(player.dead)
         {
             if(player.deadTime >= Player.DEATH_TIME)
                 regenerate_level;
+        }
+        
+        if(player.empowered)
+        {
+            if(!empoweredStateSeen) //player is freshly empowered
+            {
+                ghost.set_scared();
+                
+                empoweredStateSeen = true;
+            }
+        }
+        else
+        {
+            if(empoweredStateSeen) //player is no longer empowered
+            {
+                ghost.set_not_scared;
+                
+                empoweredStateSeen = false;
+            }
         }
         
         glClear(GL_COLOR_BUFFER_BIT);

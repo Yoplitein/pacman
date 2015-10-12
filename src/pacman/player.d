@@ -17,7 +17,8 @@ final class Player: Creature
 {
     enum NUM_TEXTURES = 16;
     enum ANIMATION_DELAY = 0.015;
-    enum DEATH_TIME = 100;
+    enum DEATH_TIME = 100; //duration of the death animation, in ticks
+    enum EMPOWERED_TIME = 500; //duration the empowered state lasts, in ticks
     
     TextureData[NUM_TEXTURES] animationFrames;
     TextureData activeTexture;
@@ -27,6 +28,8 @@ final class Player: Creature
     real rotation = 0; //in degrees
     uint textureIndex;
     vec3f color = vec3i(255, 255, 255);
+    bool empowered; //ate a very tasty floor
+    uint empoweredTime;
     
     this()
     {
@@ -43,6 +46,7 @@ final class Player: Creature
         color = vec3i(255, 255, 255);
         rotation = 0;
         activeTexture = animationFrames[0];
+        empowered = false;
     }
     
     override void update()
@@ -60,6 +64,17 @@ final class Player: Creature
                 next_texture;
             
             return;
+        }
+        
+        if(empowered)
+        {
+            empoweredTime++;
+            
+            if(empoweredTime >= EMPOWERED_TIME)
+            {
+                empowered = false;
+                empoweredTime = 0;
+            }
         }
         
         if(moving && timeSeconds - lastAnimationTime > ANIMATION_DELAY)
@@ -113,6 +128,13 @@ final class Player: Creature
         
         if(currentTile.type == TileType.TASTY_FLOOR)
             currentTile.type = TileType.FLOOR;
+        
+        if(currentTile.type == TileType.VERY_TASTY_FLOOR)
+        {
+            currentTile.type = TileType.FLOOR;
+            
+            empowered = true;
+        }
     }
     
     override void render()

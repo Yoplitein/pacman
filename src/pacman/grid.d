@@ -44,6 +44,7 @@ enum TileType
     WALL,
     FLOOR,
     TASTY_FLOOR, //floor with a dot
+    VERY_TASTY_FLOOR, //floor with a thicker dot - makes ghosts scared
     PLAYER_SPAWN,
     GHOST_SPAWN,
     
@@ -52,11 +53,11 @@ enum TileType
 
 enum Direction
 {
+    NONE,
     NORTH,
     EAST,
     SOUTH,
     WEST,
-    NONE,
 }
 
 struct Tile
@@ -86,6 +87,7 @@ final class Grid
         textures[TileType.WALL] = get_texture("res/wall.png");
         textures[TileType.FLOOR] = get_texture("res/floor.png");
         textures[TileType.TASTY_FLOOR] = get_texture("res/tasty_floor.png");
+        textures[TileType.VERY_TASTY_FLOOR] = get_texture("res/very_tasty_floor.png");
         textures[TileType.max] = get_texture("res/missing.png");
         wallTextures[Direction.NORTH] = get_texture("res/wall_north.png");
         wallTextures[Direction.EAST] = get_texture("res/wall_east.png");
@@ -215,6 +217,7 @@ final class Grid
                         break;
                     case FLOOR:
                     case TASTY_FLOOR:
+                    case VERY_TASTY_FLOOR:
                         blit(textures[tile.type]);
                         
                         break;
