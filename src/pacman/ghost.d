@@ -311,8 +311,6 @@ final class Ghost: Creature
         {
             firstUpdate = false;
             spawnpoint = gridPosition;
-            
-            info("Ghost spawnpoint at ", spawnpoint);
         }
         
         if(!moving && !startMoving)
@@ -367,7 +365,7 @@ final class Ghost: Creature
     
     void set_scared()
     {
-        if(scared)
+        if(dead || scared)
             return;
         
         scared = true;
@@ -378,7 +376,7 @@ final class Ghost: Creature
     
     void set_not_scared()
     {
-        if(!scared)
+        if(dead || !scared)
             return;
         
         scared = false;
@@ -392,8 +390,6 @@ final class Ghost: Creature
         if(dead)
             return;
         
-        info("Ghost died");
-        
         dead = true;
         lastAI = ai;
         ai = new PathingAI(this);
@@ -403,8 +399,6 @@ final class Ghost: Creature
     {
         if(!dead)
             return;
-        
-        info("Ghost revived");
         
         dead = false;
         ai = lastAI;

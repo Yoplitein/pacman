@@ -51,6 +51,8 @@ final class Player: Creature
         rotation = 0;
         activeTexture = animationFrames[0];
         empowered = false;
+        empoweredTime = 0;
+        score = 0;
     }
     
     override void update()
