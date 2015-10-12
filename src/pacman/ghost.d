@@ -378,8 +378,8 @@ final class Ghost: Creature
         
         scared = true;
         speed = SPEED_SCARED;
-        lastAI = ai;
-        ai = new RunAwayAI(this);
+        
+        set_ai(new RunAwayAI(this));
     }
     
     void set_not_scared()
@@ -389,8 +389,8 @@ final class Ghost: Creature
         
         scared = false;
         speed = SPEED_NORMAL;
-        ai = lastAI;
-        lastAI = null;
+        
+        reset_ai;
     }
     
     void set_dead()
@@ -399,8 +399,8 @@ final class Ghost: Creature
             return;
         
         dead = true;
-        lastAI = ai;
-        ai = new PathingAI(this);
+        
+        set_ai(new PathingAI(this));
     }
     
     void set_alive()
@@ -409,6 +409,21 @@ final class Ghost: Creature
             return;
         
         dead = false;
+        
+        reset_ai;
+    }
+    
+    void set_ai(BaseAI newAI)
+    {
+        lastAI = ai;
+        ai = newAI;
+    }
+    
+    void reset_ai()
+    {
+        if(lastAI is null)
+            return;
+        
         ai = lastAI;
         lastAI = null;
     }
