@@ -19,6 +19,9 @@ final class Player: Creature
     enum ANIMATION_DELAY = 0.015;
     enum DEATH_TIME = 100; //duration of the death animation, in ticks
     enum EMPOWERED_TIME = 500; //duration the empowered state lasts, in ticks
+    enum POINTS_TASTY = 1; //points received for eating a tasty floor
+    enum POINTS_VERY_TASTY = 5; //points received for eating a very tasty floor
+    enum POINTS_GHOST = 10; //points received for eating a ghost
     
     TextureData[NUM_TEXTURES] animationFrames;
     TextureData activeTexture;
@@ -30,6 +33,7 @@ final class Player: Creature
     vec3f color = vec3i(255, 255, 255);
     bool empowered; //ate a very tasty floor
     uint empoweredTime;
+    uint score;
     
     this()
     {
@@ -127,13 +131,16 @@ final class Player: Creature
         Tile *currentTile = grid[gridPosition];
         
         if(currentTile.type == TileType.TASTY_FLOOR)
+        {
             currentTile.type = TileType.FLOOR;
+            score += POINTS_TASTY;
+        }
         
         if(currentTile.type == TileType.VERY_TASTY_FLOOR)
         {
             currentTile.type = TileType.FLOOR;
-            
             empowered = true;
+            score += POINTS_VERY_TASTY;
         }
     }
     

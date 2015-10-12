@@ -88,7 +88,7 @@ void main()
         
         if(timeSeconds - lastTitleUpdate >= 1)
         {
-            window.setTitle("%d fps   %f dt".format(frames, timeDelta));
+            window.setTitle("%d fps   %f dt   %d points".format(frames, timeDelta, player.score));
             
             frames = 0;
             lastTitleUpdate = timeSeconds;

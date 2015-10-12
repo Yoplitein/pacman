@@ -336,6 +336,8 @@ final class Ghost: Creature
             {
                 set_not_scared;
                 set_dead;
+                
+                player.score += player.POINTS_GHOST;
             }
             else
                 player.dead = true;
