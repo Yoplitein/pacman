@@ -8,17 +8,17 @@ import std.random;
 import std.string;
 
 import gfm.logger;
-import gfm.sdl2;
 import gfm.opengl;
+import gfm.sdl2;
 
-import pacman;
 import pacman.entity.ghost;
-import pacman.globals;
 import pacman.entity.grid;
 import pacman.entity.player;
-import pacman.gl.texture;
 import pacman.gl.renderer;
+import pacman.gl.texture;
+import pacman.globals;
 import pacman.levelgen;
+import pacman;
 
 SDL2Texture backgroundTexture;
 

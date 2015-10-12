@@ -1,11 +1,11 @@
 module pacman.globals;
 
-import gfm.sdl2;
 import gfm.opengl;
+import gfm.sdl2;
 
+import pacman.entity.ghost;
 import pacman.entity.grid;
 import pacman.entity.player;
-import pacman.entity.ghost;
 import pacman.gl.renderer;
 
 enum WIDTH = 800;

@@ -2,8 +2,8 @@ module pacman.entity.creature;
 
 import std.math;
 
-import pacman;
 import pacman.globals;
+import pacman;
 
 class Creature
 {

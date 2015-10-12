@@ -3,8 +3,8 @@ module pacman.gl.texture;
 import std.experimental.logger;
 import std.file;
 
-import gfm.sdl2;
 import gfm.opengl;
+import gfm.sdl2;
 
 import pacman.globals;
 

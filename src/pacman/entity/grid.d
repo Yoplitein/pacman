@@ -10,9 +10,9 @@ import std.json;
 
 import gfm.sdl2;
 
-import pacman;
 import pacman.gl.texture;
 import pacman.globals;
+import pacman;
 
 immutable vec2i[Direction] directionOffsets;
 immutable Direction[Direction] directionReversals;

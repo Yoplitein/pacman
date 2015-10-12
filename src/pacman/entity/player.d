@@ -7,11 +7,11 @@ import std.string;
 import gfm.sdl2;
 import gfm.math: degrees;
 
-import pacman;
 import pacman.entity.creature;
+import pacman.entity.grid;
 import pacman.gl.texture;
 import pacman.globals;
-import pacman.entity.grid;
+import pacman;
 
 final class Player: Creature
 {

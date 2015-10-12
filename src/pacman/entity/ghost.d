@@ -1,17 +1,17 @@
 module pacman.entity.ghost;
 
-import std.experimental.logger;
-import std.random;
 import std.algorithm;
+import std.experimental.logger;
 import std.math;
+import std.random;
 
 import gfm.sdl2;
 
-import pacman;
 import pacman.entity.creature;
+import pacman.entity.grid;
 import pacman.gl.texture;
 import pacman.globals;
-import pacman.entity.grid;
+import pacman;
 
 mixin template AIConstructor()
 {

@@ -4,12 +4,12 @@ import std.experimental.logger;
 import std.file;
 import std.string;
 
-import gfm.opengl;
 import gfm.math: radians;
+import gfm.opengl;
 
-import pacman;
-import pacman.globals;
 import pacman.gl.texture;
+import pacman.globals;
+import pacman;
 
 struct Vertex
 {

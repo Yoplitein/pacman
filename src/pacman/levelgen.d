@@ -6,8 +6,8 @@ import std.experimental.logger;
 import std.random;
 import std.range;
 
-import pacman.globals;
 import pacman.entity.grid;
+import pacman.globals;
 import pacman;
 
 //offsets for Neumann neighborhoods
