@@ -25,25 +25,31 @@ SDL2Texture backgroundTexture;
 void main()
 {
     sharedLog = new ConsoleLogger;
-    sdl = new SDL2(sharedLog); scope(exit) sdl.close;
-    sdlImage = new SDLImage(sdl, IMG_INIT_PNG); scope(exit) sdlImage.close;
-    opengl = new OpenGL(sharedLog); scope(exit) opengl.close;
+    sdl = new SDL2(sharedLog);
+    scope(exit) sdl.destroy;
+    sdlImage = new SDLImage(sdl, IMG_INIT_PNG);
+    scope(exit) sdlImage.destroy;
+    opengl = new OpenGL(sharedLog);
+    scope(exit) opengl.destroy;
     window = new SDL2Window(
         sdl,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WIDTH, HEIGHT,
         SDL_WINDOW_OPENGL
-    ); scope(exit) window.close;
+    );
+    scope(exit) window.destroy;
     /*renderer = new SDL2Renderer(
         window,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-    ); scope(exit) renderer.close;*/
+    );
+    scope(exit) renderer.destroy;*/
     //backgroundTexture = get_texture("res/background.png");
     
     opengl.reload;
     init_opengl;
     
-    renderer = new Renderer; scope(exit) renderer.close;
+    renderer = new Renderer;
+    scope(exit) renderer.close;
     grid = new Grid;
     player = new Player;
     ghost = new Ghost(vec3f(1, 0, 1));

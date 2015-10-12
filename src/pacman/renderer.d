@@ -34,11 +34,13 @@ class Renderer
             
             info("Loading vertex shader");
             
-            auto vertexShader = new GLShader(opengl, GL_VERTEX_SHADER, vertexShaderSource); scope(exit) vertexShader.close;
+            auto vertexShader = new GLShader(opengl, GL_VERTEX_SHADER, vertexShaderSource);
+            scope(exit) vertexShader.destroy;
             
             info("Loading fragment shader");
             
-            auto fragmentShader = new GLShader(opengl, GL_FRAGMENT_SHADER, fragmentShaderSource); scope(exit) fragmentShader.close;
+            auto fragmentShader = new GLShader(opengl, GL_FRAGMENT_SHADER, fragmentShaderSource);
+            scope(exit) fragmentShader.destroy;
             _program = new GLProgram(opengl, [vertexShader, fragmentShader]);
             
             _program.link;
@@ -84,7 +86,8 @@ class Renderer
             specification.use;
         }
         
-        auto textureSource = sdlImage.load("res/missing.png"); scope(exit) textureSource.close;
+        auto textureSource = sdlImage.load("res/missing.png");
+        scope(exit) textureSource.destroy;
         texture = new GLTexture2D(opengl);
         
         texture.setMinFilter(GL_LINEAR_MIPMAP_LINEAR);
@@ -111,9 +114,9 @@ class Renderer
     
     void close()
     {
-        _program.close;
-        buffer.close;
-        texture.close;
+        _program.destroy;
+        buffer.destroy;
+        texture.destroy;
     }
     
     void update()

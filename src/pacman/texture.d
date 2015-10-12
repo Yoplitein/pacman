@@ -68,8 +68,10 @@ private TextureData load_texture(string path)
         static assert(false, "Unknown architecture");
     
     auto formatData = get_format_data(pixelFormat);
-    auto rawSurface = sdlImage.load(path); scope(exit) rawSurface.close;
-    auto surface = rawSurface.convert(&formatData); scope(exit) surface.close;
+    auto rawSurface = sdlImage.load(path);
+    scope(exit) rawSurface.destroy;
+    auto surface = rawSurface.convert(&formatData);
+    scope(exit) surface.destroy;
     
     assert(surface.width == TEXTURE_SIZE);
     assert(surface.height == TEXTURE_SIZE);
@@ -116,5 +118,5 @@ TextureData get_texture(string path)
 void close_textures()
 {
     foreach(data; loadedTextures.values)
-        data.texture.close;
+        data.texture.destroy;
 }
