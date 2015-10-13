@@ -76,6 +76,7 @@ void main()
         }
     }
     
+    stitch_textures;
     regenerate_level;
     renderer.program.uniform("model").set(
         mat4.translation(vec3f(15, 15, 0)) *

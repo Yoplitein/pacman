@@ -148,24 +148,12 @@ final class Player: Creature
     
     override void render()
     {
-        const width = activeTexture.width;
-        const height = activeTexture.height;
-        auto src = SDL_Rect(0, 0, width, height);
-        auto dst = SDL_Rect(cast(int)screenPosition.x, cast(int)screenPosition.y, width, height);
-        auto rotOrigin = SDL_Point(cast(int)(width * 0.5L), cast(int)(height * 0.5L));
-        
-        //TODO: rotation
         renderer.copy(
             activeTexture,
             cast(int)screenPosition.x,
             cast(int)screenPosition.y,
             rotation,
             color,
-            /*src,
-            dst,
-            rotation,
-            &rotOrigin,
-            SDL_FLIP_NONE*/
         );
     }
     

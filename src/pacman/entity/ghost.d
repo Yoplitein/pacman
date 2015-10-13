@@ -276,7 +276,7 @@ final class Ghost: Creature
     
     this(vec3f color, int aiType)
     {
-        if(bodyTexture.texture is null)
+        if(bodyTexture == TextureData.init)
         {
             bodyTexture = get_texture("res/ghost_body.png");
             bodyTextureScared = get_texture("res/ghost_body_scared.png");

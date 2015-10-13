@@ -22,7 +22,7 @@ class Renderer
     private GLProgram _program;
     private GLBuffer buffer;
     private VertexSpecification!Vertex specification;
-    private GLTexture2D texture;
+    private bool firstUpdate = true;
     private mat4 view;
     private mat4 projection;
     
@@ -86,17 +86,6 @@ class Renderer
             specification.use;
         }
         
-        auto textureSource = sdlImage.load("res/missing.png");
-        scope(exit) textureSource.destroy;
-        texture = new GLTexture2D(opengl);
-        
-        texture.setMinFilter(GL_LINEAR_MIPMAP_LINEAR);
-        texture.setMagFilter(GL_LINEAR);
-        texture.setWrapS(GL_REPEAT);
-        texture.setWrapT(GL_REPEAT);
-        texture.setImage(0, GL_RGBA, textureSource.width, textureSource.height, 0, GL_BGRA, GL_UNSIGNED_BYTE, textureSource.pixels);
-        texture.generateMipmap();
-        
         projection = mat4.orthographic(
             0, WIDTH,
             0, HEIGHT,
@@ -116,14 +105,12 @@ class Renderer
     {
         _program.destroy;
         buffer.destroy;
-        texture.destroy;
     }
     
     void update()
     {
         immutable scaledPlayerPosition = player.screenPosition - vec2(WIDTH - TEXTURE_SIZE + 2, HEIGHT + TEXTURE_SIZE / 2) / vec2(2, 2);
         immutable viewTarget = vec3f(scaledPlayerPosition, 0);
-        
         view = mat4.lookAt(
             viewTarget + vec3f(0, 0, 1),
             viewTarget,
@@ -131,25 +118,31 @@ class Renderer
         );
         
         program.uniform("view").set(view);
+        
+        if(firstUpdate)
+        {
+            firstUpdate = false;
+            
+            textureAtlas.use;
+            program.uniform("atlasSizePixels").set(atlasSizePixels);
+            program.uniform("atlasSizeTiles").set(atlasSizeTiles);
+            program.uniform("atlasTileSizeFloating").set(TEXTURE_SIZE / cast(float)atlasSizePixels);
+        }
     }
     
     void copy(TextureData data, int x, int y, real rotation = 0, vec3f color = vec3f(1, 1, 1))
     {
-        data.texture.use;
+        enum halfSize = TEXTURE_SIZE / 2f;
+        
         program.uniform("model").set(
             mat4.translation(vec3f(cast(float)x, cast(float)y, 0)) *
-            mat4.translation(vec3f(data.width / 2f, data.height / 2f, 0)) *
+            mat4.translation(vec3f(halfSize, halfSize, 0)) *
             mat4.rotation(rotation.radians, vec3f(0, 0, 1)) *
-            mat4.translation(vec3f(-data.width / 2f, -data.height / 2f, 0)) *
-            mat4.scaling(vec3f(data.width, data.height, 0))
+            mat4.translation(vec3f(-halfSize, -halfSize, 0)) *
+            mat4.scaling(vec3f(TEXTURE_SIZE, TEXTURE_SIZE, 0))
         );
         program.uniform("colorMask").set(color);
-        glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
-    }
-    
-    void draw()
-    {
-        texture.use;
+        program.uniform("index").set(data.index);
         glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
     }
 }

@@ -1,7 +1,9 @@
 module pacman.gl.texture;
 
+import std.algorithm;
 import std.experimental.logger;
 import std.file;
+import std.math;
 
 import gfm.opengl;
 import gfm.sdl2;
@@ -9,23 +11,28 @@ import gfm.sdl2;
 import pacman.globals;
 
 private TextureData missingTexture;
-private TextureData[string] loadedTextures;
+private TextureData[] queuedTextures; //textures to be stitched
+package GLTexture2D textureAtlas; //the texture that results from stitching
+package uint currentTextureIndex; //counter for TextureData.index
+package uint atlasSizeTiles; //the width and height of the atlas in TEXTURE_SIZE chunks
+package uint atlasSizePixels; //the width and height of the atlas in pixels
+private bool texturesStitched; //whether stitching has been done
 
 struct TextureData
 {
-    private GLTexture2D _texture;
     string path;
-    int width;
-    int height;
-    
-    @property GLTexture2D texture()
-    {
-        return _texture;
-    }
+    package uint index;
 }
 
-SDL_PixelFormat get_format_data(uint format)
+private SDL_PixelFormat get_format_data()
 {
+    version(LittleEndian)
+        enum format = SDL_PIXELFORMAT_ABGR8888;
+    else version(BigEndian)
+        enum format = SDL_PIXELFORMAT_RGBA8888;
+    else
+        static assert(false, "Unknown architecture");
+    
     SDL_PixelFormat result;
     int bpp;
     uint r;
@@ -53,52 +60,38 @@ SDL_PixelFormat get_format_data(uint format)
     return result;
 }
 
-private TextureData load_texture(string path)
+private SDL2Surface load_image(string path, SDL_PixelFormat formatData)
 {
     if(!path.exists)
-        fatal("Attempted to load missing texture: ", path);
+        fatal("Attempted to load missing image: ", path);
     
-    info("Caching texture ", path);
-    
-    version(LittleEndian)
-        enum pixelFormat = SDL_PIXELFORMAT_ABGR8888;
-    else version(BigEndian)
-        enum pixelFormat = SDL_PIXELFORMAT_RGBA8888;
-    else
-        static assert(false, "Unknown architecture");
-    
-    auto formatData = get_format_data(pixelFormat);
     auto rawSurface = sdlImage.load(path);
     scope(exit) rawSurface.destroy;
     auto surface = rawSurface.convert(&formatData);
-    scope(exit) surface.destroy;
     
     assert(surface.width == TEXTURE_SIZE);
     assert(surface.height == TEXTURE_SIZE);
     
-    auto texture = new GLTexture2D(opengl);
-    TextureData data = TextureData(
-        texture,
-        path,
-        surface.width,
-        surface.height
-    );
-    loadedTextures[path] = data;
+    return surface;
+}
+
+private TextureData queue_texture(string path)
+{
+    if(texturesStitched)
+        fatal("Attempting to queue texture for stitching too late");
     
-    texture.setMinFilter(GL_NEAREST_MIPMAP_NEAREST);
-    texture.setMagFilter(GL_NEAREST);
-    texture.setWrapS(GL_REPEAT);
-    texture.setWrapT(GL_REPEAT);
-    texture.setImage(0, GL_RGBA, surface.width, surface.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface.pixels);
-    texture.generateMipmap;
+    info("Queuing texture ", path);
+    
+    auto data = TextureData(path, currentTextureIndex++);
+    queuedTextures ~= data;
     
     return data;
 }
 
 TextureData get_texture(string path)
 {
-    if(!missingTexture.texture)
-        missingTexture = load_texture("res/missing.png");
+    if(missingTexture == TextureData.init)
+        missingTexture = queue_texture("res/missing.png");
     
     if(!path.exists)
     {
@@ -107,16 +100,68 @@ TextureData get_texture(string path)
         return missingTexture;
     }
     
-    auto textureData = path in loadedTextures;
+    auto search = queuedTextures.filter!(tex => tex.path == path);
     
-    if(textureData)
-        return *textureData;
+    if(!search.empty)
+        return search.front;
     else
-        return load_texture(path);
+        return queue_texture(path);
+}
+
+void stitch_textures()
+{
+    if(texturesStitched)
+        fatal("Attempting to re-stitch textures");
+    
+    texturesStitched = true;
+    auto formatData = get_format_data;
+    atlasSizeTiles = cast(int)sqrt(cast(real)queuedTextures.length) + 1;
+    atlasSizePixels = TEXTURE_SIZE * atlasSizeTiles;
+    
+    infof("Have %s textures to stitch", queuedTextures.length);
+    infof("Final texture size: %s²", atlasSizeTiles * TEXTURE_SIZE);
+    
+    SDL2Surface stitched = new SDL2Surface(
+        sdl,
+        atlasSizePixels, //width
+        atlasSizePixels, //height
+        formatData.BitsPerPixel,
+        formatData.Rmask,
+        formatData.Gmask,
+        formatData.Bmask,
+        formatData.Amask,
+    );
+    scope(exit) stitched.destroy;
+    
+    foreach(index, texture; queuedTextures)
+    {
+        texture.index = index;
+        int x = index % atlasSizeTiles * TEXTURE_SIZE;
+        int y = index / atlasSizeTiles * TEXTURE_SIZE;
+        auto srcRect = SDL_Rect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
+        auto dstRect = SDL_Rect(x, y, TEXTURE_SIZE, TEXTURE_SIZE);
+        SDL2Surface image = load_image(texture.path, formatData);
+        scope(exit) image.destroy;
+        
+        SDL_BlitSurface(
+            image.handle,
+            &srcRect,
+            stitched.handle,
+            &dstRect,
+        );
+    }
+    
+    textureAtlas = new GLTexture2D(opengl);
+    
+    textureAtlas.setMinFilter(GL_NEAREST_MIPMAP_NEAREST);
+    textureAtlas.setMagFilter(GL_NEAREST);
+    textureAtlas.setWrapS(GL_REPEAT);
+    textureAtlas.setWrapT(GL_REPEAT);
+    textureAtlas.setImage(0, GL_RGBA, stitched.width, stitched.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, stitched.pixels);
+    textureAtlas.generateMipmap;
 }
 
 void close_textures()
 {
-    foreach(data; loadedTextures.values)
-        data.texture.destroy;
+    textureAtlas.destroy;
 }
