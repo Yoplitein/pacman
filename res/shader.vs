@@ -4,13 +4,10 @@ in vec2 coordinate;
 in vec2 textureCoordinate;
 
 out vec2 fragmentTextureCoordinate;
-out vec3 fragColor;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
-uniform vec2 position;
-uniform float rotation;
 
 void main()
 {
