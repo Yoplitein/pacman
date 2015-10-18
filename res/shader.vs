@@ -1,4 +1,5 @@
 #version 130
+#define TEXTURE_SIZE 32u
 
 in vec2 coordinate;
 in vec2 textureCoordinate;
@@ -10,11 +11,13 @@ in vec4 modelColumn3;
 in vec4 modelColumn4;
 
 out vec2 fragmentTextureCoordinate;
-flat out uint fragmentTextureIndex;
 out vec3 fragmentColorMask;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform uint atlasSizePixels; //size of the atlas in pixels
+uniform uint atlasSizeTiles; //size of the atlas in TEXTURE_SIZE tiles
+uniform float atlasTileSizeFloating; //size of a tile on the atlas in floating coords
 
 void main()
 {
@@ -24,9 +27,18 @@ void main()
         modelColumn3,
         modelColumn4
     );
-    fragmentTextureCoordinate = textureCoordinate;
-    fragmentTextureIndex = uint(maskAndIndex.w);
-    fragmentColorMask = maskAndIndex.rgb;
     vec4 coordinate4 = vec4(coordinate, 0.0, 1.0);
     gl_Position = projection * view * model * coordinate4;
+    
+    uint index = uint(maskAndIndex.w);
+    uvec2 tileCoords = uvec2(
+        index % atlasSizeTiles,
+        index / atlasSizeTiles
+    );
+    uvec2 pixelCoords = tileCoords * TEXTURE_SIZE;
+    vec2 floatingCoords = pixelCoords / float(atlasSizePixels);
+    vec2 flippedCoords = vec2(textureCoordinate.x, 1 -textureCoordinate.y);
+    fragmentTextureCoordinate = floatingCoords + flippedCoords * atlasTileSizeFloating;
+    
+    fragmentColorMask = maskAndIndex.rgb;
 }
