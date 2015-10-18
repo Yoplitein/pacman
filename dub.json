@@ -4,9 +4,9 @@
     "copyright": "Copyright © 2015, Steven",
     "authors": ["Steven"],
     "dependencies": {
-        "gfm:logger": "~>3.0.5",
-        "gfm:sdl2": "~>3.0.5",
-        "gfm:math": "~>3.0.5",
-        "gfm:opengl": "~>3.0.5",
+        "gfm:logger": "~>3.0.6",
+        "gfm:sdl2": "~>3.0.6",
+        "gfm:math": "~>3.0.6",
+        "gfm:opengl": "~>3.0.6",
     },
 }

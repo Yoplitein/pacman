@@ -1,5 +1,6 @@
 module pacman.gl.renderer;
 
+import std.array;
 import std.experimental.logger;
 import std.file;
 import std.string;
@@ -11,20 +12,34 @@ import pacman.gl.texture;
 import pacman.globals;
 import pacman;
 
-struct Vertex
+private struct Vertex
 {
     vec2f coordinate;
     vec2f textureCoordinate;
 }
 
+private struct Instance
+{
+    vec4f maskAndIndex; //color mask and texture index in single vector to work around gfm limitations
+    //model matrix unpacked as four vec4s, again working around gfm limitations
+    vec4f modelColumn1;
+    vec4f modelColumn2;
+    vec4f modelColumn3;
+    vec4f modelColumn4;
+}
+
 class Renderer
 {
     private GLProgram _program;
-    private GLBuffer buffer;
-    private VertexSpecification!Vertex specification;
+    private GLBuffer shapeBuffer;
+    private GLBuffer instanceBuffer;
+    private VertexSpecification!Vertex shapeSpecification;
+    private VertexSpecification!Instance instanceSpecification;
+    private GLsizei shapeVertexCount;
     private bool firstUpdate = true;
     private mat4 view;
     private mat4 projection;
+    private Appender!(Instance[]) instances;
     
     this()
     {
@@ -79,11 +94,18 @@ class Renderer
                     vec2f(uvMin, uvMin)
                 ),
             ];
-            buffer = new GLBuffer(opengl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, shape.dup);
-            specification = new VertexSpecification!Vertex(_program);
+            shapeBuffer = new GLBuffer(opengl, GL_ARRAY_BUFFER, GL_STATIC_DRAW, shape.dup);
+            shapeSpecification = new VertexSpecification!Vertex(_program);
+            shapeVertexCount = cast(GLsizei)(shapeBuffer.size / shapeSpecification.vertexSize);
             
-            buffer.bind;
-            specification.use;
+            shapeBuffer.bind;
+            shapeSpecification.use;
+            
+            instanceBuffer = new GLBuffer(opengl, GL_ARRAY_BUFFER, GL_DYNAMIC_DRAW, null);
+            instanceSpecification = new VertexSpecification!Instance(_program);
+            
+            instanceBuffer.bind;
+            instanceSpecification.use(1);
         }
         
         projection = mat4.orthographic(
@@ -92,6 +114,7 @@ class Renderer
             0.0, 5.0,
         );
         
+        _program.uniform("activeTexture").set(0);
         _program.uniform("projection").set(projection);
         _program.uniform("view").set(view);
     }
@@ -104,7 +127,8 @@ class Renderer
     void close()
     {
         _program.destroy;
-        buffer.destroy;
+        shapeBuffer.destroy;
+        instanceBuffer.destroy;
     }
     
     void update()
@@ -133,17 +157,34 @@ class Renderer
     void copy(TextureData data, int x, int y, real rotation = 0, vec3f color = vec3f(1, 1, 1))
     {
         enum halfSize = TEXTURE_SIZE / 2f;
+        mat4 model =
+            mat4.translation(vec3f(cast(float)x + halfSize, cast(float)y + halfSize, 0)) *
+            mat4.rotation(rotation.radians, vec3f(0, 0, 1))
+        ;
         
-        program.uniform("model").set(
-            mat4.translation(vec3f(cast(float)x, cast(float)y, 0)) *
-            mat4.translation(vec3f(halfSize, halfSize, 0)) *
-            mat4.rotation(rotation.radians, vec3f(0, 0, 1)) *
-            mat4.translation(vec3f(-halfSize, -halfSize, 0)) *
-            mat4.scaling(vec3f(TEXTURE_SIZE, TEXTURE_SIZE, 0))
+        model.translate(vec3f(-halfSize, -halfSize, 0));
+        model.scale(vec3f(TEXTURE_SIZE, TEXTURE_SIZE, 0));
+        instances.put(
+            Instance(
+                vec4f(color, cast(float)data.index),
+                model.column(0),
+                model.column(1),
+                model.column(2),
+                model.column(3),
+            )
         );
-        program.uniform("colorMask").set(color);
-        program.uniform("index").set(data.index);
-        glDrawArrays(GL_TRIANGLES, 0, cast(int)(buffer.size / specification.vertexSize));
+    }
+    
+    void flush()
+    {
+        instanceBuffer.setData(instances.data);
+        glDrawArraysInstanced(
+            GL_TRIANGLES,
+            0,
+            shapeVertexCount,
+            instances.data.length,
+        );
+        instances.clear;
     }
 }
 

@@ -78,11 +78,6 @@ void main()
     
     stitch_textures;
     regenerate_level;
-    renderer.program.uniform("model").set(
-        mat4.translation(vec3f(15, 15, 0)) *
-        mat4.scaling(vec3f(200, 200, 1))
-    );
-    renderer.program.uniform("activeTexture").set(0);
     
     while(true)
     {
@@ -150,7 +145,7 @@ void main()
         
         player.update;
         player.render;
-        //renderer.draw;
+        renderer.flush;
         window.swapBuffers;
     }
     
