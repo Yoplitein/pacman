@@ -133,7 +133,7 @@ void stitch_textures()
     );
     scope(exit) stitched.destroy;
     
-    foreach(index, texture; queuedTextures)
+    foreach(int index, texture; queuedTextures)
     {
         texture.index = index;
         int x = index % atlasSizeTiles * TEXTURE_SIZE;

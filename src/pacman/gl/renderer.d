@@ -182,7 +182,7 @@ class Renderer
             GL_TRIANGLES,
             0,
             shapeVertexCount,
-            instances.data.length,
+            cast(int)instances.data.length,
         );
         instances.clear;
     }
